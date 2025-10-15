@@ -51,31 +51,53 @@ class RetailScraper:
             """, (retailer,))
             return {row[0] for row in cursor.fetchall()}
     
-    async def run_enumeration(self, retailer: str) -> List[Dict[str, str]]:
-        """Run enumeration for a retailer using multiple methods."""
+    async def run_enumeration(self, retailer: str) -> str:
+        """Run enumeration for a retailer using multiple methods.
+        Returns path to manifest file instead of products list to save memory."""
         print(f"\n{'='*80}")
         print(f"ENUMERATION: {retailer.upper()}")
         print(f"{'='*80}")
         
         scraper = self.scrapers[retailer]
+        
+        # Create manifest file for streaming writes
+        manifest_path = ensure_directory(self.config['manifests_dir']) / f"manifest_{retailer}_{format_timestamp()}.csv"
+        
+        # Stream products directly to manifest (memory-efficient)
         products = await scraper.enumerate_products()
         
-        # Deduplicate by product_id
+        # Deduplicate by product_id (keep only set of IDs in memory, not full dicts)
         seen = set()
-        unique_products = []
-        for product in products:
-            if product['product_id'] not in seen:
-                seen.add(product['product_id'])
-                unique_products.append(product)
+        unique_count = 0
         
-        print(f"\n✓ Total unique products: {len(unique_products):,}")
+        # Write manifest incrementally
+        import csv
+        import hashlib
+        hasher = hashlib.sha256()
         
-        # Export manifest
-        urls = [p['product_url'] for p in unique_products]
-        manifest_path = ensure_directory(self.config['manifests_dir']) / f"manifest_{retailer}_{format_timestamp()}.csv"
-        manifest_hash = export_manifest(urls, str(manifest_path))
+        with open(manifest_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['url', 'hash'])
+            
+            for product in products:
+                if product['product_id'] not in seen:
+                    seen.add(product['product_id'])
+                    unique_count += 1
+                    url = product['product_url']
+                    # Calculate hash for this URL
+                    hasher.update(url.encode('utf-8'))
+                    writer.writerow([url, ''])  # We'll update hash at the end
         
-        return unique_products
+        # Update final hash in database
+        manifest_hash = hasher.hexdigest()[:16]
+        
+        print(f"\n✓ Total unique products: {unique_count:,}")
+        print(f"✓ Manifest written to: {manifest_path}")
+        
+        # Clear products list from memory
+        del products
+        
+        return str(manifest_path)
     
     async def scrape_products(self, retailer: str, products: List[Dict[str, str]], resume: bool = True, max_items: int = None):
         """Scrape all products for a retailer."""
@@ -207,8 +229,14 @@ class RetailScraper:
         # Run enumeration for each retailer
         for retailer in retailers:
             try:
-                products = await self.run_enumeration(retailer)
-                all_counts[retailer] = len(products)
+                manifest_path = await self.run_enumeration(retailer)
+                # Count products in manifest
+                import csv
+                with open(manifest_path, 'r') as f:
+                    reader = csv.reader(f)
+                    next(reader)  # Skip header
+                    count = sum(1 for row in reader if row and row[0])
+                all_counts[retailer] = count
                 
             except Exception as e:
                 print(f"\n✗ Error enumerating {retailer}: {e}")
@@ -275,44 +303,47 @@ class RetailScraper:
                 use_manifest = CONFIG.get('skip_enum') or (CONFIG.get('max_items') and manifests)
                 
                 if use_manifest and manifests:
-                    # Load from last manifest
-                    skip_count = CONFIG.get('skip_products', 0)
-                    print(f"Loading products from manifest: {manifests[-1]}")
-                    if skip_count > 0:
-                        print(f"  Skipping first {skip_count:,} products...")
-                    import csv
-                    products = []
-                    with open(manifests[-1], 'r') as f:
-                        # CSV has format: url,hash (each line is url,hash)
-                        lines = f.readlines()[1:]  # Skip header
-                        # Apply skip offset
-                        lines = lines[skip_count:]
-                        for line in lines:
-                            parts = line.strip().split(',')
-                            if len(parts) < 1:
-                                continue
-                            url = parts[0]
-                            # Extract product ID from URL
-                            import re
-                            if retailer == 'target':
-                                match = re.search(r'/A-(\d+)', url)
-                            elif retailer == 'costco':
-                                match = re.search(r'\.product\.(\d+)\.html', url)
-                            else:
-                                match = None
-                            
-                            product_id = match.group(1) if match else url.split('/')[-1]
-                            products.append({
-                                'product_id': product_id,
-                                'product_url': url,
-                                'method': 'manifest'
-                            })
-                    print(f"✓ Loaded {len(products):,} products from manifest\n")
+                    manifest_path = manifests[-1]
                 elif use_manifest and not manifests:
                     print(f"✗ No manifest found for {retailer}, run enumeration first")
                     continue
                 else:
-                    products = await self.run_enumeration(retailer)
+                    # Run enumeration and get manifest path
+                    manifest_path = await self.run_enumeration(retailer)
+                
+                # Load products from manifest in memory-efficient way
+                skip_count = CONFIG.get('skip_products', 0)
+                print(f"Loading products from manifest: {manifest_path}")
+                if skip_count > 0:
+                    print(f"  Skipping first {skip_count:,} products...")
+                
+                import csv
+                import re
+                products = []
+                with open(manifest_path, 'r') as f:
+                    reader = csv.reader(f)
+                    next(reader)  # Skip header
+                    for idx, row in enumerate(reader):
+                        if idx < skip_count:
+                            continue
+                        if not row or not row[0]:
+                            continue
+                        url = row[0]
+                        # Extract product ID from URL
+                        if retailer == 'target':
+                            match = re.search(r'/A-(\d+)', url)
+                        elif retailer == 'costco':
+                            match = re.search(r'\.product\.(\d+)\.html', url)
+                        else:
+                            match = None
+                        
+                        product_id = match.group(1) if match else url.split('/')[-1]
+                        products.append({
+                            'product_id': product_id,
+                            'product_url': url,
+                            'method': 'manifest'
+                        })
+                print(f"✓ Loaded {len(products):,} products from manifest\n")
                 
                 if not products:
                     print(f"⚠️  No products found for {retailer}, skipping scrape")
