@@ -4,18 +4,18 @@ services:
     runtime: python
     plan: starter  # Can upgrade to standard/pro as needed
     buildCommand: pip install -r requirements.txt && playwright install chromium
-    startCommand: python main.py --retailers target costco
+    startCommand: python main.py --retailers target --no-resume
     envVars:
-      - key: SCRAPER_MODE
-        value: production
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: DATABASE_PATH
-        value: /opt/render/project/src/scraper_data.db
-      - key: CONCURRENT_TASKS
-        value: "5"  # Adjust based on plan
+        value: /mnt/data/scraper_data.db
+      - key: EXPORT_DIR
+        value: /mnt/data/exports
+      - key: MANIFEST_DIR
+        value: /mnt/data/manifests
     disk:
       name: scraper-disk
-      mountPath: /opt/render/project/src
+      mountPath: /mnt/data
       sizeGB: 10  # For storing database and exports
 

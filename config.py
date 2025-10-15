@@ -3,6 +3,8 @@ Configuration settings for the retail scraper.
 Optimized for 32GB RAM machine running on home network first.
 """
 
+import os
+
 CONFIG = {
     # Location settings for price/availability
     'zip_code': '90210',  # Default ZIP code - user should update this
@@ -40,12 +42,12 @@ CONFIG = {
     'browser_pool_size': 80,   # Max concurrent browser instances
     'cleanup_interval_minutes': 15,  # Restart contexts to prevent memory leaks
     
-    # Database settings
-    'database_path': 'scraper_data.db',
+    # Database settings (use env var for Render, local path otherwise)
+    'database_path': os.getenv('DATABASE_PATH', 'scraper_data.db'),
     
-    # Export settings
-    'export_dir': 'exports',
-    'manifests_dir': 'manifests',
+    # Export settings (use env vars for Render, local paths otherwise)
+    'export_dir': os.getenv('EXPORT_DIR', 'exports'),
+    'manifests_dir': os.getenv('MANIFEST_DIR', 'manifests'),
     
     # User agents for requests (rotated)
     'user_agents': [
