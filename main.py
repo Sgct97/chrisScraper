@@ -94,6 +94,134 @@ class RetailScraper:
         
         return str(manifest_path)
     
+    async def scrape_products_from_manifest(self, retailer: str, manifest_path: str, resume: bool = True, skip_count: int = 0, max_items: int = None):
+        """Scrape products from manifest in batches to avoid OOM."""
+        import csv
+        import re
+        
+        BATCH_SIZE = 10000  # Process 10K products at a time
+        
+        # Count total products in manifest
+        with open(manifest_path, 'r') as f:
+            total_count = sum(1 for _ in csv.reader(f)) - 1  # Subtract header
+        
+        print(f"✓ Total products in manifest: {total_count:,}")
+        
+        # Get already scraped products for resume
+        already_scraped = set()
+        if resume:
+            already_scraped = self._get_already_scraped(retailer)
+            if already_scraped:
+                print(f"✓ Resume mode: {len(already_scraped):,} products already scraped")
+        
+        # Create scrape run
+        run_id = self.database.create_scrape_run(retailer, self.proxy_manager.is_enabled())
+        self.retailer_runs[retailer] = run_id
+        
+        scraper = self.scrapers[retailer]
+        progress = ProgressTracker(total_count - skip_count, retailer)
+        
+        # Get concurrency limit for this retailer
+        concurrency = self.config['concurrency'].get(retailer, 10)
+        
+        # Process manifest in batches
+        batch_num = 0
+        total_processed = 0
+        
+        with open(manifest_path, 'r') as f:
+            reader = csv.reader(f)
+            next(reader)  # Skip header
+            
+            batch = []
+            for idx, row in enumerate(reader):
+                # Skip if before skip_count
+                if idx < skip_count:
+                    continue
+                
+                # Stop if max_items reached
+                if max_items and total_processed >= max_items:
+                    break
+                
+                if not row or not row[0]:
+                    continue
+                
+                url = row[0]
+                
+                # Extract product ID from URL
+                if retailer == 'target':
+                    match = re.search(r'/A-(\d+)', url)
+                elif retailer == 'costco':
+                    match = re.search(r'\.product\.(\d+)\.html', url)
+                else:
+                    match = None
+                
+                product_id = match.group(1) if match else url.split('/')[-1]
+                
+                # Skip if already scraped
+                if resume and product_id in already_scraped:
+                    continue
+                
+                batch.append({
+                    'product_id': product_id,
+                    'product_url': url,
+                    'method': 'manifest'
+                })
+                
+                # Process batch when it reaches BATCH_SIZE
+                if len(batch) >= BATCH_SIZE:
+                    batch_num += 1
+                    print(f"\n{'='*60}")
+                    print(f"Processing batch {batch_num} ({len(batch):,} products)")
+                    print(f"{'='*60}")
+                    
+                    await self._scrape_batch(scraper, batch, run_id, progress, concurrency)
+                    total_processed += len(batch)
+                    batch = []  # Clear batch from memory
+            
+            # Process remaining products in last batch
+            if batch:
+                batch_num += 1
+                print(f"\n{'='*60}")
+                print(f"Processing final batch {batch_num} ({len(batch):,} products)")
+                print(f"{'='*60}")
+                
+                await self._scrape_batch(scraper, batch, run_id, progress, concurrency)
+                total_processed += len(batch)
+        
+        # Update run stats
+        stats = progress.get_stats()
+        self.database.update_scrape_run(
+            run_id,
+            completed_at=datetime.now(),
+            total_attempted=stats['completed'],
+            total_success=stats['success'],
+            total_failed=stats['failed'] + stats['blocked'] + stats['not_found'],
+            block_rate_percent=stats['block_rate_percent']
+        )
+        
+        print(f"\n\n✓ Scraping complete for {retailer}")
+        print(f"  Total processed: {total_processed:,}")
+        print(f"  Success: {stats['success']:,}")
+        print(f"  Failed: {stats['failed']}")
+        print(f"  Blocked: {stats['blocked']}")
+        print(f"  Not Found: {stats['not_found']}")
+    
+    async def _scrape_batch(self, scraper, batch: List[Dict[str, str]], run_id: int, progress: ProgressTracker, concurrency: int):
+        """Scrape a single batch of products."""
+        semaphore = asyncio.Semaphore(concurrency)
+        
+        async def scrape_with_limit(product_info):
+            async with semaphore:
+                return await self._scrape_single_product(
+                    scraper, 
+                    product_info, 
+                    run_id, 
+                    progress
+                )
+        
+        tasks = [scrape_with_limit(p) for p in batch]
+        await asyncio.gather(*tasks, return_exceptions=True)
+    
     async def scrape_products(self, retailer: str, products: List[Dict[str, str]], resume: bool = True, max_items: int = None):
         """Scrape all products for a retailer."""
         print(f"\n{'='*80}")
@@ -306,47 +434,19 @@ class RetailScraper:
                     # Run enumeration and get manifest path
                     manifest_path = await self.run_enumeration(retailer)
                 
-                # Load products from manifest in memory-efficient way
+                # Scrape in batches to avoid OOM (process manifest in chunks)
                 skip_count = CONFIG.get('skip_products', 0)
-                print(f"Loading products from manifest: {manifest_path}")
+                print(f"Processing products from manifest: {manifest_path}")
                 if skip_count > 0:
                     print(f"  Skipping first {skip_count:,} products...")
                 
-                import csv
-                import re
-                products = []
-                with open(manifest_path, 'r') as f:
-                    reader = csv.reader(f)
-                    next(reader)  # Skip header
-                    for idx, row in enumerate(reader):
-                        if idx < skip_count:
-                            continue
-                        if not row or not row[0]:
-                            continue
-                        url = row[0]
-                        # Extract product ID from URL
-                        if retailer == 'target':
-                            match = re.search(r'/A-(\d+)', url)
-                        elif retailer == 'costco':
-                            match = re.search(r'\.product\.(\d+)\.html', url)
-                        else:
-                            match = None
-                        
-                        product_id = match.group(1) if match else url.split('/')[-1]
-                        products.append({
-                            'product_id': product_id,
-                            'product_url': url,
-                            'method': 'manifest'
-                        })
-                print(f"✓ Loaded {len(products):,} products from manifest\n")
-                
-                if not products:
-                    print(f"⚠️  No products found for {retailer}, skipping scrape")
-                    continue
-                
-                # Scraping
-                max_items = CONFIG.get('max_items')
-                await self.scrape_products(retailer, products, resume=resume, max_items=max_items)
+                await self.scrape_products_from_manifest(
+                    retailer, 
+                    manifest_path, 
+                    resume=resume, 
+                    skip_count=skip_count,
+                    max_items=CONFIG.get('max_items')
+                )
                 
             except Exception as e:
                 print(f"\n✗ Error processing {retailer}: {e}")

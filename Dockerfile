@@ -44,5 +44,5 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 
 # Run the scraper
-CMD ["python", "main.py", "--retailers", "target", "--no-resume"]
+CMD ["python", "main.py", "--retailers", "target"]
 
