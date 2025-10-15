@@ -10,12 +10,12 @@ CONFIG = {
     'zip_code': '90210',  # Default ZIP code - user should update this
     
     # Concurrency optimized for 2GB RAM on Render (each Playwright instance ~150-200MB)
-    # 8 concurrent browsers × 150MB = 1.2GB, leaves 800MB for Python
+    # 4 concurrent browsers × 150MB = 600MB, leaves 1.4GB for Python + safety margin
     'concurrency': {
-        'target': 8,       # API calls + occasional browser for marketplace products
-        'costco': 6,       # Cloudflare + anti-bot
-        'homegoods': 6,    # Lighter protection
-        'tjmaxx': 6        # Lighter protection
+        'target': 4,       # API calls + occasional browser for marketplace products
+        'costco': 4,       # Cloudflare + anti-bot
+        'homegoods': 4,    # Lighter protection
+        'tjmaxx': 4        # Lighter protection
     },
     
     # Rate limiting - conservative for home IP

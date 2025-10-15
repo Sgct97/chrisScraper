@@ -221,7 +221,7 @@ class TargetScraper(BaseScraper):
             
             # 1. Get main product data
             # Use channel=WEB for national online pricing (not store-specific)
-            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&channel=WEB&is_bot=false'
+            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin={tcin}&channel=WEB&is_bot=false'
             product_data = await self.fetch_json(pdp_api_url, headers=api_headers)
             
             # If API returns no data, product might be marketplace seller - try browser fallback
@@ -230,7 +230,7 @@ class TargetScraper(BaseScraper):
             
             # 2. Get fulfillment data (shipping estimate & cost)
             # Use central US ZIP for consistent nationwide estimates (50000 = Des Moines, IA)
-            fulfillment_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/product_fulfillment_and_variation_hierarchy_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&zip=50000'
+            fulfillment_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/product_fulfillment_and_variation_hierarchy_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin={tcin}&zip=50000'
             fulfillment_data = await self.fetch_json(fulfillment_api_url, headers=api_headers)
             
             # Merge fulfillment data into product data
