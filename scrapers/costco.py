@@ -2,7 +2,7 @@
 Costco scraper - Stealth browser with Cloudflare bypass, public data only.
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, AsyncGenerator
 from bs4 import BeautifulSoup
 import json
 import re
@@ -19,13 +19,12 @@ class CostcoScraper(BaseScraper):
         self.base_url = RETAILERS['costco']['base_url']
         self.sitemap_url = RETAILERS['costco']['sitemap_url']
     
-    async def enumerate_products(self) -> List[Dict[str, str]]:
+    async def enumerate_products(self) -> AsyncGenerator[Dict[str, str], None]:
         """
-        Enumerate Costco products:
+        Enumerate Costco products (streaming):
         1. Multiple sitemap indexes
         2. Category pagination validation
         """
-        all_products = []
         seen_ids = set()
         
         # Costco has multiple sitemap indexes - check both
@@ -39,34 +38,19 @@ class CostcoScraper(BaseScraper):
         for index_url in sitemap_indexes:
             print(f"\n  Checking: {index_url}")
             self.sitemap_url = index_url
-            sitemap_products = await self._enumerate_sitemap()
             
             # Dedupe across indexes
-            for product in sitemap_products:
+            async for product in self._enumerate_sitemap():
                 if product['product_id'] not in seen_ids:
                     seen_ids.add(product['product_id'])
-                    all_products.append(product)
-            
-            print(f"    Found {len(sitemap_products):,} products (running unique total: {len(all_products):,})")
-        
-        self.database.insert_enumeration_count(
-            self.retailer_name,
-            'sitemap',
-            len(all_products),
-            f"Parsed from both sitemap indexes"
-        )
-        print(f"  ✓ Found {len(all_products):,} total unique products")
-        
-        return all_products
+                    yield product
     
-    async def _enumerate_sitemap(self) -> List[Dict[str, str]]:
-        """Parse Costco sitemap."""
-        products = []
-        
+    async def _enumerate_sitemap(self) -> AsyncGenerator[Dict[str, str], None]:
+        """Parse Costco sitemap (streaming)."""
         html = await self.fetch_html(self.sitemap_url)
         if not html:
             print(f"  ✗ Failed to fetch sitemap")
-            return products
+            return
         
         soup = BeautifulSoup(html, 'xml')
         
@@ -97,11 +81,11 @@ class CostcoScraper(BaseScraper):
                             if '.product.' in url.lower():
                                 item_id = self._extract_item_id(url)
                                 if item_id:
-                                    products.append({
+                                    yield {
                                         'product_id': item_id,
                                         'product_url': url,
                                         'method': 'sitemap'
-                                    })
+                                    }
                     
                     print(f"    Parsed sitemap {idx+1}: {len(urls)} URLs")
         else:
@@ -113,13 +97,11 @@ class CostcoScraper(BaseScraper):
                     url = loc.text.strip()
                     item_id = self._extract_item_id(url)
                     if item_id:
-                        products.append({
+                        yield {
                             'product_id': item_id,
                             'product_url': url,
                             'method': 'sitemap'
-                        })
-        
-        return products
+                        }
     
     def _extract_item_id(self, url: str) -> Optional[str]:
         """Extract Costco item number from URL."""

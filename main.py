@@ -52,7 +52,7 @@ class RetailScraper:
             return {row[0] for row in cursor.fetchall()}
     
     async def run_enumeration(self, retailer: str) -> str:
-        """Run enumeration for a retailer using multiple methods.
+        """Run enumeration for a retailer using streaming (memory-efficient).
         Returns path to manifest file instead of products list to save memory."""
         print(f"\n{'='*80}")
         print(f"ENUMERATION: {retailer.upper()}")
@@ -63,14 +63,11 @@ class RetailScraper:
         # Create manifest file for streaming writes
         manifest_path = ensure_directory(self.config['manifests_dir']) / f"manifest_{retailer}_{format_timestamp()}.csv"
         
-        # Stream products directly to manifest (memory-efficient)
-        products = await scraper.enumerate_products()
-        
         # Deduplicate by product_id (keep only set of IDs in memory, not full dicts)
         seen = set()
         unique_count = 0
         
-        # Write manifest incrementally
+        # Write manifest incrementally as we enumerate (TRUE STREAMING)
         import csv
         import hashlib
         hasher = hashlib.sha256()
@@ -79,23 +76,21 @@ class RetailScraper:
             writer = csv.writer(f)
             writer.writerow(['url', 'hash'])
             
-            for product in products:
+            # Consume async generator - products yielded one-by-one
+            async for product in scraper.enumerate_products():
                 if product['product_id'] not in seen:
                     seen.add(product['product_id'])
                     unique_count += 1
                     url = product['product_url']
                     # Calculate hash for this URL
                     hasher.update(url.encode('utf-8'))
-                    writer.writerow([url, ''])  # We'll update hash at the end
+                    writer.writerow([url, ''])
         
         # Update final hash in database
         manifest_hash = hasher.hexdigest()[:16]
         
         print(f"\n✓ Total unique products: {unique_count:,}")
         print(f"✓ Manifest written to: {manifest_path}")
-        
-        # Clear products list from memory
-        del products
         
         return str(manifest_path)
     

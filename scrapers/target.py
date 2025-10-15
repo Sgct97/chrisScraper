@@ -2,7 +2,7 @@
 Target scraper - GraphQL API interception strategy.
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, AsyncGenerator
 from bs4 import BeautifulSoup
 from datetime import datetime
 import json
@@ -23,42 +23,29 @@ class TargetScraper(BaseScraper):
         self.base_url = RETAILERS['target']['base_url']
         self.sitemap_url = RETAILERS['target']['sitemap_url']
     
-    async def enumerate_products(self) -> List[Dict[str, str]]:
+    async def enumerate_products(self) -> AsyncGenerator[Dict[str, str], None]:
         """
-        Enumerate products using multiple methods:
-        1. Sitemap parsing
-        2. Category API counts (for validation)
+        Enumerate products using multiple methods (streaming).
+        Yields products one-by-one instead of loading all into memory.
         """
-        products = []
-        
         # Method 1: Sitemap enumeration
         print(f"\n[{self.retailer_name}] Method 1: Sitemap enumeration...")
-        sitemap_products = await self._enumerate_sitemap()
-        products.extend(sitemap_products)
-        self.database.insert_enumeration_count(
-            self.retailer_name, 
-            'sitemap', 
-            len(sitemap_products),
-            f"Parsed from {self.sitemap_url}"
-        )
-        print(f"  ✓ Found {len(sitemap_products):,} products from sitemap")
+        
+        async for product in self._enumerate_sitemap():
+            yield product
         
         # Method 2: Category validation (lighter check)
         # This would require exploring Target's category API
         # For now, we'll rely on sitemap as primary source
-        
-        return products
     
-    async def _enumerate_sitemap(self) -> List[Dict[str, str]]:
-        """Parse Target's sitemap index and extract all product URLs."""
-        products = []
-        
+    async def _enumerate_sitemap(self) -> AsyncGenerator[Dict[str, str], None]:
+        """Parse Target's sitemap index and extract all product URLs (streaming)."""
         # Fetch main sitemap index (gzipped)
         print(f"  Fetching sitemap from: {self.sitemap_url}")
         html = await self._fetch_gzipped_sitemap(self.sitemap_url)
         if not html:
             print(f"  ✗ Failed to fetch sitemap index")
-            return products
+            return
         
         print(f"  ✓ Fetched sitemap: {len(html)} chars")
         
@@ -77,11 +64,11 @@ class TargetScraper(BaseScraper):
                     # Extract TCIN from URL
                     tcin = self._extract_tcin_from_url(url)
                     if tcin:
-                        products.append({
+                        yield {
                             'product_id': tcin,
                             'product_url': url,
                             'method': 'sitemap'
-                        })
+                        }
         else:
             # Multiple sitemaps, fetch each one
             print(f"  Found {len(sitemaps)} sitemap files to parse...")
@@ -103,15 +90,13 @@ class TargetScraper(BaseScraper):
                             url = loc.text.strip()
                             tcin = self._extract_tcin_from_url(url)
                             if tcin:
-                                products.append({
+                                yield {
                                     'product_id': tcin,
                                     'product_url': url,
                                     'method': 'sitemap'
-                                })
+                                }
                     
                     print(f"    Parsed sitemap {idx+1}/{len(sitemaps)}: {len(urls)} URLs")
-        
-        return products
     
     async def _fetch_gzipped_sitemap(self, url: str) -> Optional[str]:
         """Fetch and decompress gzipped sitemap."""
