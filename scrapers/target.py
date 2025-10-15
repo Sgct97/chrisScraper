@@ -220,7 +220,8 @@ class TargetScraper(BaseScraper):
             }
             
             # 1. Get main product data
-            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&pricing_store_id=3991'
+            # Use channel=WEB for national online pricing (not store-specific)
+            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&channel=WEB&is_bot=false'
             product_data = await self.fetch_json(pdp_api_url, headers=api_headers)
             
             # If API returns no data, product might be marketplace seller - try browser fallback
