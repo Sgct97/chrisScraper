@@ -189,36 +189,9 @@ class TargetScraper(BaseScraper):
             # Parse API response
             product = self._parse_api_response(product_data, product_url, product_id)
             
-            # If price is missing, it's a marketplace product - scrape price from live page
-            if product and product.get('price_current') is None and product.get('status') == 'success':
-                print(f"  🔍 Marketplace product detected (no price in API), scraping live page...")
-                try:
-                    context = await self.browser_manager.create_context(self.retailer_name)
-                    page = await self.browser_manager.new_page(context)
-                    
-                    # Use domcontentloaded instead of networkidle (faster, less strict)
-                    await page.goto(product_url, wait_until='domcontentloaded', timeout=20000)
-                    
-                    # Wait for price element to appear
-                    await page.wait_for_selector('span[data-test="product-price"]', timeout=10000)
-                    price_elem = await page.query_selector('span[data-test="product-price"]')
-                    if price_elem:
-                        price_text = await price_elem.inner_text()
-                        price_text = price_text.strip().replace('$', '').replace(',', '')
-                        try:
-                            product['price_current'] = float(price_text)
-                            print(f"  ✓ Captured marketplace price: ${product['price_current']}")
-                        except:
-                            pass
-                    
-                    await self.browser_manager.close_context(context)
-                except Exception as e:
-                    print(f"  ⚠️  Could not capture marketplace price: {e}")
-                    # Clean up if exception occurred
-                    try:
-                        await self.browser_manager.close_context(context)
-                    except:
-                        pass
+            # Note: Marketplace products (sold by 3rd parties) don't have prices in API
+            # They would need browser scraping, but that's unreliable on Render
+            # So we save them with price_current=None for now
             
             if product:
                 self.proxy_manager.record_request(success=True, is_block=False)
