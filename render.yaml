@@ -1,13 +1,10 @@
 services:
   - type: worker
     name: retail-scraper-worker
-    runtime: python
-    plan: starter  # Can upgrade to standard/pro as needed
-    buildCommand: pip install -r requirements.txt && playwright install --with-deps chromium
-    startCommand: python main.py --retailers target --no-resume
+    runtime: docker
+    plan: standard  # Standard plan for better performance
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
       - key: DATABASE_PATH
         value: /mnt/data/scraper_data.db
       - key: EXPORT_DIR
