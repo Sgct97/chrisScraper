@@ -276,12 +276,17 @@ class RetailScraper:
                 
                 if use_manifest and manifests:
                     # Load from last manifest
+                    skip_count = CONFIG.get('skip_products', 0)
                     print(f"Loading products from manifest: {manifests[-1]}")
+                    if skip_count > 0:
+                        print(f"  Skipping first {skip_count:,} products...")
                     import csv
                     products = []
                     with open(manifests[-1], 'r') as f:
                         # CSV has format: url,hash (each line is url,hash)
                         lines = f.readlines()[1:]  # Skip header
+                        # Apply skip offset
+                        lines = lines[skip_count:]
                         for line in lines:
                             parts = line.strip().split(',')
                             if len(parts) < 1:
@@ -360,6 +365,8 @@ async def main():
                         help='Maximum number of products to scrape per retailer (for testing)')
     parser.add_argument('--skip-enum', action='store_true',
                         help='Skip enumeration, use last manifest (for testing scraping only)')
+    parser.add_argument('--skip', type=int, default=0,
+                        help='Skip first N products from manifest (for testing different products)')
     
     args = parser.parse_args()
     
@@ -368,6 +375,8 @@ async def main():
         CONFIG['max_items'] = args.max_items
     if args.skip_enum:
         CONFIG['skip_enum'] = True
+    if args.skip:
+        CONFIG['skip_products'] = args.skip
     
     scraper = RetailScraper()
     

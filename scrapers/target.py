@@ -166,6 +166,24 @@ class TargetScraper(BaseScraper):
             # Call Target's internal API
             product_data = await self._fetch_product_api(product_id)
             
+            # Check if product needs browser (marketplace seller)
+            if product_data and product_data.get('status') == 'needs_browser':
+                # Fallback to browser scraping for marketplace products
+                context = await self.browser_manager.create_context(self.retailer_name)
+                page = await self.browser_manager.new_page(context)
+                await page.goto(product_url, wait_until='networkidle', timeout=30000)
+                
+                # Wait for price element to ensure content is loaded
+                try:
+                    await page.wait_for_selector('span[data-test="product-price"]', timeout=10000)
+                except:
+                    pass  # Continue anyway if selector not found
+                
+                # Scrape from live page before closing
+                result = await self._parse_browser_fallback_live(page, product_url, product_id)
+                await self.browser_manager.close_context(context)
+                return result
+            
             # Check if product not found
             if product_data and product_data.get('status') == 'not_found':
                 return {'status': 'not_found'}
@@ -185,6 +203,38 @@ class TargetScraper(BaseScraper):
             
             # Parse API response
             product = self._parse_api_response(product_data, product_url, product_id)
+            
+            # If price is missing, it's a marketplace product - scrape price from live page
+            if product and product.get('price_current') is None and product.get('status') == 'success':
+                print(f"  🔍 Marketplace product detected (no price in API), scraping live page...")
+                try:
+                    context = await self.browser_manager.create_context(self.retailer_name)
+                    page = await self.browser_manager.new_page(context)
+                    
+                    # Use domcontentloaded instead of networkidle (faster, less strict)
+                    await page.goto(product_url, wait_until='domcontentloaded', timeout=20000)
+                    
+                    # Wait for price element to appear
+                    await page.wait_for_selector('span[data-test="product-price"]', timeout=10000)
+                    price_elem = await page.query_selector('span[data-test="product-price"]')
+                    if price_elem:
+                        price_text = await price_elem.inner_text()
+                        price_text = price_text.strip().replace('$', '').replace(',', '')
+                        try:
+                            product['price_current'] = float(price_text)
+                            print(f"  ✓ Captured marketplace price: ${product['price_current']}")
+                        except:
+                            pass
+                    
+                    await self.browser_manager.close_context(context)
+                except Exception as e:
+                    print(f"  ⚠️  Could not capture marketplace price: {e}")
+                    # Clean up if exception occurred
+                    try:
+                        await self.browser_manager.close_context(context)
+                    except:
+                        pass
+            
             if product:
                 self.proxy_manager.record_request(success=True, is_block=False)
             
@@ -192,14 +242,12 @@ class TargetScraper(BaseScraper):
             
         except Exception as e:
             import traceback
-            print(f"  Error scraping {product_url}: {e}")
+            print(f"  ❌ EXCEPTION scraping {product_url}: {e}")
             traceback.print_exc()
             return None
     
     async def _fetch_product_api(self, tcin: str) -> Optional[Dict]:
         """Fetch product data from Target's internal API."""
-        # pricing_store_id is required - using a generic store ID
-        api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&pricing_store_id=3991'
         product_url = f'https://www.target.com/p/-/A-{tcin}'
         
         try:
@@ -213,17 +261,24 @@ class TargetScraper(BaseScraper):
                 'sec-ch-ua-platform': '"macOS"',
             }
             
-            # Use fetch_json with API-specific headers
-            response_data = await self.fetch_json(api_url, headers=api_headers)
-            if not response_data:
-                return {'status': 'not_found'}  # 404 or error
+            # 1. Get main product data
+            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&pricing_store_id=3991'
+            product_data = await self.fetch_json(pdp_api_url, headers=api_headers)
             
-            # Check if product data exists (ignore pricing_store_id errors)
-            # Target returns errors about store_id but still includes product data
-            if not response_data.get('data') or not response_data.get('data', {}).get('product'):
-                return {'status': 'not_found'}
+            # If API returns no data, product might be marketplace seller - try browser fallback
+            if not product_data or not product_data.get('data', {}).get('product'):
+                return {'status': 'needs_browser'}  # Signal to use browser scraping
             
-            return response_data
+            # 2. Get fulfillment data (shipping estimate & cost)
+            # Use central US ZIP for consistent nationwide estimates (50000 = Des Moines, IA)
+            fulfillment_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/product_fulfillment_and_variation_hierarchy_v1?key=ff457966e64d5e877fdbad070f276d18ecec4a01&tcin={tcin}&zip=50000'
+            fulfillment_data = await self.fetch_json(fulfillment_api_url, headers=api_headers)
+            
+            # Merge fulfillment data into product data
+            if fulfillment_data and fulfillment_data.get('data', {}).get('product'):
+                product_data['data']['product']['fulfillment_data'] = fulfillment_data['data']['product']
+            
+            return product_data
         except Exception as e:
             print(f"  API fetch error for {tcin}: {e}")
             return None
@@ -248,8 +303,8 @@ class TargetScraper(BaseScraper):
             prod_desc = item.get('product_description', {})
             title = prod_desc.get('title')
             
-            # Skip invalid products with "/" as title
-            if not title or title == '/':
+            # Skip only if title is completely missing
+            if not title:
                 return {'status': 'not_found'}
             
             # Brand is in primary_brand, not product_brand
@@ -308,6 +363,26 @@ class TargetScraper(BaseScraper):
             specs_list = product.get('item', {}).get('product_description', {}).get('soft_bullets', {}).get('bullets', [])
             specifications = ' | '.join(specs_list) if specs_list else None
             
+            # Shipping from fulfillment API
+            fulfillment_data = product.get('fulfillment_data', {})
+            shipping_options = fulfillment_data.get('fulfillment', {}).get('shipping_options', {})
+            
+            # Extract shipping cost (standard shipping)
+            pay_charges = fulfillment_data.get('pay_per_order_charges', {})
+            shipping_cost = pay_charges.get('one_day') or pay_charges.get('scheduled_delivery')
+            
+            # Extract delivery estimate
+            services = shipping_options.get('services', [])
+            shipping_estimate = None
+            if services:
+                standard_service = services[0]  # Get first/standard shipping
+                min_date = standard_service.get('min_delivery_date')
+                max_date = standard_service.get('max_delivery_date')
+                if min_date:
+                    # Convert "2025-10-18" to "Sat, Oct 18"
+                    date_obj = datetime.strptime(min_date, '%Y-%m-%d')
+                    shipping_estimate = f"{date_obj.strftime('%a, %b %d')}"
+            
             return {
                 'product_id': tcin,
                 'retailer': 'target',
@@ -324,14 +399,17 @@ class TargetScraper(BaseScraper):
                 'image_urls': all_images[:10] if all_images else None,
                 'ratings_average': ratings_avg,
                 'ratings_count': ratings_count,
-                'shipping_cost': None,  # Would need additional API call
-                'shipping_estimate': None,
+                'shipping_cost': shipping_cost,
+                'shipping_estimate': shipping_estimate,
                 'variants': None,  # Complex, can add if needed
                 'seller': 'Target',
                 'scraped_at': datetime.now().isoformat(),
                 'status': 'success'
             }
         except Exception as e:
+            print(f"  ❌ PARSE EXCEPTION for {product_id}: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def _extract_next_data(self, soup: BeautifulSoup) -> Optional[Dict]:
@@ -343,6 +421,130 @@ class TargetScraper(BaseScraper):
             except:
                 pass
         return None
+    
+    async def _parse_browser_fallback_live(self, page, product_url: str, product_id: str) -> Optional[Dict[str, Any]]:
+        """Parse marketplace/third-party seller products from live page."""
+        try:
+            # Scrape price from live DOM (loaded dynamically)
+            price_current = None
+            try:
+                price_elem = await page.query_selector('span[data-test="product-price"]')
+                if price_elem:
+                    price_text = await price_elem.inner_text()
+                    price_text = price_text.strip().replace('$', '').replace(',', '')
+                    try:
+                        price_current = float(price_text)
+                    except:
+                        pass
+            except:
+                pass
+            
+            # Scrape shipping estimate
+            shipping_estimate = None
+            try:
+                # Look for "Arrives by" text
+                shipping_elem = await page.query_selector('text=/Arrives by/')
+                if shipping_elem:
+                    shipping_text = await shipping_elem.inner_text()
+                    shipping_estimate = shipping_text.strip()
+            except:
+                pass
+            
+            # Now get full HTML for remaining data
+            html = await page.content()
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Extract __NEXT_DATA__ for full details
+            script = soup.find('script', id='__NEXT_DATA__')
+            if script and script.string:
+                data = json.loads(script.string)
+                props = data.get('props', {}).get('pageProps', {}).get('initialData', {}).get('data', {}).get('product', {})
+                
+                if props:
+                    # Extract from __NEXT_DATA__ structure
+                    item = props.get('item', {})
+                    title = item.get('product_description', {}).get('title', 'Unknown')
+                    brand = item.get('primary_brand', {}).get('name')
+                    category = props.get('category', {}).get('name')
+                    
+                    # Description
+                    description = item.get('product_description', {}).get('downstream_description')
+                    if description:
+                        from bs4 import BeautifulSoup as BS
+                        description = BS(description, 'html.parser').get_text(strip=True, separator=' ')
+                    
+                    # Images
+                    images = item.get('enrichment', {}).get('images', {})
+                    image_urls = [images.get('primary_image', '')] if images.get('primary_image') else []
+                    image_urls.extend(images.get('alternate_images', []))
+                    
+                    # Ratings
+                    ratings = props.get('ratings_and_reviews', {}).get('statistics', {}).get('rating', {})
+                    ratings_avg = ratings.get('average')
+                    ratings_count = ratings.get('count')
+                    
+                    # Seller
+                    seller = 'Marketplace'
+                    
+                    return {
+                        'product_id': product_id,
+                        'retailer': 'target',
+                        'product_url': product_url,
+                        'title': title,
+                        'brand': brand,
+                        'category': category,
+                        'price_current': price_current,  # From live DOM
+                        'price_compare_at': None,
+                        'currency': 'USD',
+                        'availability': 'in_stock',
+                        'description': description,
+                        'specifications': None,
+                        'image_urls': image_urls,
+                        'ratings_average': ratings_avg,
+                        'ratings_count': ratings_count,
+                        'shipping_cost': None,
+                        'shipping_estimate': shipping_estimate,  # From live DOM
+                        'variants': None,
+                        'seller': seller,
+                        'scraped_at': datetime.now().isoformat(),
+                        'status': 'success'
+                    }
+            
+            # Fallback to simple DOM scraping if __NEXT_DATA__ not available
+            title = None
+            h1 = soup.find('h1')
+            if h1:
+                title = h1.get_text(strip=True)
+            
+            return {
+                'product_id': product_id,
+                'retailer': 'target',
+                'product_url': product_url,
+                'title': title or 'Unknown',
+                'brand': None,
+                'category': None,
+                'price_current': price_current,
+                'price_compare_at': None,
+                'currency': 'USD',
+                'availability': 'in_stock',
+                'description': None,
+                'specifications': None,
+                'image_urls': None,
+                'ratings_average': None,
+                'ratings_count': None,
+                'shipping_cost': None,
+                'shipping_estimate': shipping_estimate,
+                'variants': None,
+                'seller': 'Marketplace',
+                'scraped_at': datetime.now().isoformat(),
+                'status': 'success'
+            }
+        except Exception as e:
+            print(f"  Browser fallback failed for {product_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
     
     def _parse_next_data(self, data: Dict, product_url: str, product_id: str) -> Optional[Dict[str, Any]]:
         """Parse product data from __NEXT_DATA__ JSON."""
