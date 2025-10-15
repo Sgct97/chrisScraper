@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/spensercourville-taylor/htmlfiles/chrisScrapper/tjmaxx_undetected.py", line 2, in <module>
+    from undetected_playwright.async_api import async_playwright
+ModuleNotFoundError: No module named 'undetected_playwright.async_api'

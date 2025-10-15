@@ -1,0 +1,27 @@
+Enumerating ALL TJ Maxx categories (no filters)...
+
+1. Main shop page...
+   ✓ 178 products
+
+2. Found 1107 total category URLs (including filters)
+
+3. Crawling 150 category URLs...
+
+[1/150] N-1032618897?Nr=AND%28isEarlyA... error: Page.content: Unable to retrie
+[2/150] N-3108344540?Nr=AND%28isEarlyA... 48 new (total: 226)
+[3/150] N-4047458435?mm=women%3Af%3A+%... 3 new (total: 229)
+[4/150] N-3218871398?Nr=AND%28isEarlyA... 1 new (total: 230)
+[5/150] N-3451356500?Nr=AND%28isEarlyA... 3 new (total: 233)
+[6/150] N-386488718?mm=men%3Af%3A+%3A5... 1 new (total: 234)
+[7/150] N-3192745895?mm=kids+%26+baby%... 0 new (total: 234)
+[8/150] N-3223217474?Nr=AND%28isEarlyA... 5 new (total: 239)
+[9/150] N-58833?Nr=AND%28isEarlyAccess... 179 new (total: 418)
+[10/150] N-3160039545?mm=home%3Af%3A+%3... 18 new (total: 436)
+[11/150] N-405160702?Nr=AND%28isEarlyAc... 2 new (total: 438)
+[12/150] N-944410246?mm=women%3Af%3A+%3... 5 new (total: 443)
+[13/150] N-2399193052?mm=women%3Af%3A+%... 0 new (total: 443)
+[14/150] N-986405820?Nr=AND%28isEarlyAc... 5 new (total: 448)
+[15/150] N-99278944?Nr=AND%28isEarlyAcc... 15 new (total: 463)
+[16/150] N-616908809?Nr=AND%28isEarlyAc... 3 new (total: 466)
+[17/150] N-3285712293+3951437597?mm=kid... 0 new (total: 466)
+[18/150] N-1864769598?Nr=AND%28isEarlyA... 

@@ -1,0 +1,51 @@
+Enumerating ALL TJ Maxx categories (no filters)...
+
+1. Main shop page...
+   ✓ 178 products
+
+2. Found 1107 total category URLs (including filters)
+
+3. Crawling ALL 1107 category URLs...
+
+[1/1107] N-2272083696?Nr=AND%28isEarlyA... error: Page.content: Unable to retrie
+[2/1107] N-2157897704?mm=women%3Af%3A+%... 5 new (total: 183)
+[3/1107] N-3951437597+269768881?mm=clea... 0 new (total: 183)
+[4/1107] N-1513438336?Nr=AND%28isEarlyA... 2 new (total: 185)
+[5/1107] N-1372746380?Nr=AND%28isEarlyA... 1 new (total: 186)
+[6/1107] N-1415450142?Nr=AND%28isEarlyA... 15 new (total: 201)
+[7/1107] N-1973495483+2179804981?mm=hom... 41 new (total: 242)
+[8/1107] N-3136020766?Nr=AND%28isEarlyA... 4 new (total: 246)
+[9/1107] N-842114098?Nr=AND%28OR%28prod... 4 new (total: 250)
+[10/1107] N-2398673051?Nr=AND%28isEarlyA... 13 new (total: 263)
+[11/1107] N-1842190734?Nr=AND%28isEarlyA... 3 new (total: 266)
+[12/1107] N-1324638658+842114098?mm=men%... 0 new (total: 266)
+[13/1107] N-367798042?mm=beauty+%26+acce... 1 new (total: 267)
+[14/1107] N-226084143?mm=beauty+%26+acce... 8 new (total: 275)
+[15/1107] N-1691169990+3582313824?mm=the... 0 new (total: 275)
+[16/1107] N-1691169990+3554035875?mm=the... node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: write EPIPE
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:572:12)
+    at _write (node:internal/streams/writable:501:10)
+    at Writable.write (node:internal/streams/writable:510:10)
+    at PipeTransport.send (/Users/spensercourville-taylor/htmlfiles/chrisScrapper/venv/lib/python3.13/site-packages/playwright/driver/package/lib/server/utils/pipeTransport.js:52:21)
+    at dispatcherConnection.onmessage (/Users/spensercourville-taylor/htmlfiles/chrisScrapper/venv/lib/python3.13/site-packages/playwright/driver/package/lib/cli/driver.js:60:59)
+    at DispatcherConnection.sendEvent (/Users/spensercourville-taylor/htmlfiles/chrisScrapper/venv/lib/python3.13/site-packages/playwright/driver/package/lib/server/dispatchers/dispatcher.js:180:10)
+Emitted 'error' event on Socket instance at:
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9) {
+  errno: -32,
+  code: 'EPIPE',
+  syscall: 'write'
+}
+
+Node.js v22.18.0

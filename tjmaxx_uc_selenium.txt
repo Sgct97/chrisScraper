@@ -1,0 +1,15 @@
+Launching undetected Chrome...
+
+Loading main page...
+Main page: 178 products (total: 178)
+
+Found 1089 URLs to crawl
+
+[1/1089] N-564508913... BLOCKED
+
+Got blocked after 1 pages
+
+============================================================
+URLs crawled: 1/1089
+Total products: 178
+============================================================

@@ -1,0 +1,21 @@
+services:
+  - type: worker
+    name: retail-scraper-worker
+    runtime: python
+    plan: starter  # Can upgrade to standard/pro as needed
+    buildCommand: pip install -r requirements.txt && playwright install chromium
+    startCommand: python main.py --retailers target costco
+    envVars:
+      - key: SCRAPER_MODE
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/scraper_data.db
+      - key: CONCURRENT_TASKS
+        value: "5"  # Adjust based on plan
+    disk:
+      name: scraper-disk
+      mountPath: /opt/render/project/src
+      sizeGB: 10  # For storing database and exports
+

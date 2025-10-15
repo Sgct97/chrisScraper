@@ -1,0 +1,11 @@
+Loading main page...
+
+Main page: 178 products
+
+Found 37 main categories
+
+[1] shoes... BLOCKED - stopping
+
+============================================================
+Total products found: 178
+============================================================

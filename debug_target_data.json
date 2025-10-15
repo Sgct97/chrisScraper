@@ -1,0 +1,668 @@
+{
+  "props": {
+    "pageProps": {
+      "isProductDetailServerSideRenderPriceEnabled": false
+    },
+    "formFactor": "desktop",
+    "hasWebpSupport": true,
+    "isAiAgent": false,
+    "isBot": false,
+    "isSeoPhantom": false,
+    "sapphireInstance": {
+      "serviceName": "digital-web",
+      "qualifiedExperiments": {
+        "ch": [],
+        "dt": "",
+        "vid": "",
+        "pages": [
+          {
+            "svc": [
+              {
+                "name": "digital-web",
+                "h": "1f55bb7f44be10b4e07b50ab043d51aa",
+                "payload": [
+                  {
+                    "tid": "0a32be81-54c8-4d39-b680-af692b8f18c9",
+                    "pl": [
+                      {
+                        "EARLY_ACCESS_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-09-02T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "0d84a0aa-8bc8-4dcf-b6ac-6e22f25082bd",
+                    "pl": [
+                      {
+                        "GLOBAL_UNIFIED_LIST_ENABLED": true
+                      }
+                    ],
+                    "et": "2025-11-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "22569e34-22a6-43ee-a68d-ebf186391e00",
+                    "pl": [
+                      {
+                        "TARGET_CIRCLE_MULTI_MILESTONE_GAME_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "31334fb9-ad04-4a6d-a03e-968e9b1790bb",
+                    "pl": [
+                      {
+                        "AUTH_AT_EDGE_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-08-03T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "39f53457-ee37-46f6-ba3f-b8a281ac8cb4",
+                    "pl": [
+                      {
+                        "VIRTUAL_BUNDLE_COMPLEMENTARY_ENABLED": true
+                      }
+                    ],
+                    "et": "2030-04-03T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "44c22cee-9260-413d-a4ef-6f51e1ec504d",
+                    "pl": [
+                      {
+                        "PPO_UPSELL_BANNER": true
+                      }
+                    ],
+                    "et": "2027-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "49b832b4-83b6-4094-9335-fade9d56ba4f",
+                    "pl": [
+                      {}
+                    ],
+                    "et": "2026-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "4a20912a-18e2-46b8-a772-5da717c6a67c",
+                    "pl": [
+                      {
+                        "SHOW_VISIBILITY_PREFERENCES": true
+                      }
+                    ],
+                    "et": "2025-10-22T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "56ae1808-747a-46e0-8f58-93e274e81b27",
+                    "pl": [
+                      {
+                        "SHOW_BRAND_PREFERENCES": true
+                      }
+                    ],
+                    "et": "2025-12-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "56d52d15-81b9-40ff-b46f-37152cb90805",
+                    "pl": [
+                      {
+                        "3d-maintenance-screen": true
+                      }
+                    ],
+                    "et": "2028-04-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "60ebb30f-deaa-4edf-a54c-8b685c005ca6",
+                    "pl": [
+                      {
+                        "ENABLED_SHARE_LIST": true
+                      }
+                    ],
+                    "et": "2026-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "6254ca31-486f-4292-a753-256544d7fd43",
+                    "pl": [
+                      {
+                        "SHOPPING_LIST_ENABLED": true
+                      }
+                    ],
+                    "et": "2025-12-20T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "70e0739d-1fb7-4d84-918d-3c5faa3351bd",
+                    "pl": [
+                      {
+                        "UPDATE_360_LINK": true
+                      }
+                    ],
+                    "et": "2026-01-27T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "7816d80d-aeb4-426f-91e3-624b866b2b57",
+                    "pl": [
+                      {
+                        "STRIKETHROUGH_PRICING_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-03-17T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "9068f49b-2bb0-4e77-a577-d8457b985c36",
+                    "pl": [
+                      {
+                        "VIRTUAL_BUNDLE_MULTIPACK_ENABLED": true
+                      }
+                    ],
+                    "et": "2033-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "93b72d69-3d54-4c2c-afd7-c1f67cedcca2",
+                    "pl": [
+                      {
+                        "PDP_DEALS_AND_BENEFITS_HEADING_ENABLED": true
+                      }
+                    ],
+                    "et": "2027-09-26T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "9781c88f-4865-4a71-a5f2-6c12f6979046",
+                    "pl": [
+                      {
+                        "SWITCH_DESIRABILITY_CUES_WITH_ORNAMENTS": true
+                      }
+                    ],
+                    "et": "2026-11-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "a1cec406-9f5d-4493-b25b-37e728014c3e",
+                    "pl": [
+                      {
+                        "UPGRADE_MEMBERSHIP_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-06-16T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "a4f9b4c8-8952-45f9-81d6-fcdd45c1618b",
+                    "pl": [
+                      {
+                        "VE_APP_REPORTS_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-06-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "a964309c-93b5-478a-84a7-c1bea470bad8",
+                    "pl": [
+                      {
+                        "LIST_AND_FAV_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-02-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "ac7041df-fcc6-4ab8-92d1-64aec6f106c5",
+                    "pl": [
+                      {
+                        "STRIKETHROUGH_PHASE_TWO_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-07-02T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "b1f66b2b-3b9f-4ed9-929a-9f487636d595",
+                    "pl": [
+                      {
+                        "SHOW_REGISTRY_PRIVATE_ITEMS": false
+                      }
+                    ],
+                    "et": "2026-04-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "b28aa354-53a8-4614-a9db-2070ed1a07cf",
+                    "pl": [
+                      {
+                        "TOSS-UPLOADS-ENABLED": false
+                      }
+                    ],
+                    "et": "2039-05-02T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "b8588bc0-4d2f-436b-9811-a6f4def82065",
+                    "pl": [
+                      {
+                        "GLOBAL_BUY_NOW_FROM_PDP_ENABLED": true,
+                        "GLOBAL_BUY_NOW_REFACTOR_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-07-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "b8c33afb-d865-4ef7-8286-673f44b0d5d0",
+                    "pl": [
+                      {
+                        "GLOBAL_PDP_FULFILLMENT_ALL_CHILDREN_ENABLED": true
+                      }
+                    ],
+                    "et": "2025-11-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "cca7b3ef-cb3f-4650-97f0-f777ffa08f84",
+                    "pl": [
+                      {
+                        "HOLIDAY_GIFT_FINDER_ENABLED": true
+                      }
+                    ],
+                    "et": "2025-10-21T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "d5e71d72-6242-4c5e-b029-4044194a96cb",
+                    "pl": [
+                      {
+                        "ENABLE_JOBS_FEATURE_FLAG": true
+                      }
+                    ],
+                    "et": "2050-04-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "e0d26bc8-b6e3-43e8-8f12-cd7a14228277",
+                    "pl": [
+                      {
+                        "ONE_DAY_DELIVERY_ENABLED": true
+                      }
+                    ],
+                    "et": "2025-10-22T20:00:00.999Z"
+                  },
+                  {
+                    "tid": "e4c1ef22-c5d4-4d1c-934c-4db44ccb5d66",
+                    "pl": [
+                      {
+                        "SPEEDCURVE_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-08-15T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "e56d83fd-1771-4842-8412-d515b92ef3a2",
+                    "pl": [
+                      {
+                        "BUY_NOW_SIMPLIFIED_PLANS_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-10-02T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "e6c1f0fa-16b9-4f84-8fac-47fb61084b82",
+                    "pl": [
+                      {
+                        "AI-TO-DRM-PUBLISH": false,
+                        "AI_CLASSIFICATION_FEATURE_FLAG": true,
+                        "ASSET-REUSEABLE-FLAG": true,
+                        "BYPASS-SIGNATURE-CHECK": true,
+                        "FETCH-ID-FROM-REQUEST": true
+                      }
+                    ],
+                    "et": "2026-02-19T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "e8f8f71f-df92-494e-80dc-d0eeada307f3",
+                    "pl": [
+                      {
+                        "PDP_COMPARE_SIMILAR_ITEMS_ENABLED": true
+                      }
+                    ],
+                    "et": "2025-11-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "f140eef3-f900-46b5-8639-32a314c38e89",
+                    "pl": [
+                      {
+                        "EXP_TARGET_CIRCLE_DEALS_PAGE_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "f3eb8428-4de8-4b25-b7c4-e827c873d3a7",
+                    "pl": [
+                      {
+                        "MEASURE_DISPLAY_NAME_PERFORMANCE_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-01-01T05:59:59.999Z"
+                  },
+                  {
+                    "tid": "f6e6249e-27eb-4886-9009-0b2cae636abe",
+                    "pl": [
+                      {
+                        "social_proofing_enabled": true
+                      }
+                    ],
+                    "et": "2026-07-22T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "f7adfedd-3ec3-4a73-b909-27842bb8a6c0",
+                    "pl": [
+                      {
+                        "EXP_PDP_DEALS_LINK_TEXT": "DPLP_SHOW_ITEMS_AND_DETAILS",
+                        "EXP_PDP_DEALS_LINK_TEXT_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-05-01T04:59:59.999Z"
+                  },
+                  {
+                    "tid": "f852de0e-3fde-49fa-b6dd-f05cb1892228",
+                    "pl": [
+                      {
+                        "bestseller_halloween_factor": "halloween"
+                      }
+                    ],
+                    "et": "2025-11-01T04:59:59.999Z"
+                  }
+                ]
+              },
+              {
+                "name": "redoak",
+                "h": "2334868eec9a2449c8ceebc8a4d6cf87",
+                "payload": [
+                  {
+                    "tid": "31334fb9-ad04-4a6d-a03e-968e9b1790bb",
+                    "pl": [
+                      {
+                        "AUTH_AT_EDGE_ENABLED": true
+                      }
+                    ],
+                    "et": "2026-08-03T04:59:59.999Z"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "initialExperimentTrackingDetails": {
+        "tr": [
+          {
+            "qe": "26e816de-28e1-43b2-97a7-1f3d2c27ec41",
+            "qt": "31334fb9-ad04-4a6d-a03e-968e9b1790bb",
+            "qp": 1
+          },
+          {
+            "qe": "0168d171-3a78-4aa5-8f35-465dfc9d3562",
+            "qt": "4a20912a-18e2-46b8-a772-5da717c6a67c",
+            "qp": 1
+          },
+          {
+            "qe": "51a89b7d-d286-4030-868f-739a4ba1a683",
+            "qt": "7816d80d-aeb4-426f-91e3-624b866b2b57",
+            "qp": 1
+          },
+          {
+            "qe": "d7fafb97-3a38-4ad9-bc3c-8e5074c3fa7c",
+            "qt": "e0d26bc8-b6e3-43e8-8f12-cd7a14228277",
+            "qp": 1
+          },
+          {
+            "qe": "b1d64197-d1dd-4105-bb71-995c9100b33c",
+            "qt": "6254ca31-486f-4292-a753-256544d7fd43",
+            "qp": 1
+          },
+          {
+            "qe": "bdf64cbd-9986-4d0b-af31-1660558bc184",
+            "qt": "a964309c-93b5-478a-84a7-c1bea470bad8",
+            "qp": 1
+          },
+          {
+            "qe": "c2de657b-d9ae-4d37-91d7-d7779cc969e5",
+            "qt": "cca7b3ef-cb3f-4650-97f0-f777ffa08f84",
+            "qp": 1
+          },
+          {
+            "qe": "c0d70c35-851b-4075-b0b9-0f9331e3c7fe",
+            "qt": "e6c1f0fa-16b9-4f84-8fac-47fb61084b82",
+            "qp": 1
+          },
+          {
+            "qe": "d2f60a5b-46ea-4bc7-a30c-9f14fac07b9b",
+            "qt": "56ae1808-747a-46e0-8f58-93e274e81b27",
+            "qp": 1
+          },
+          {
+            "qe": "cdefa00c-a2a0-4f8f-9ee6-d7b26e7a0735",
+            "qt": "b8588bc0-4d2f-436b-9811-a6f4def82065",
+            "qp": 1
+          },
+          {
+            "qe": "11c3535a-a105-41a4-b43b-c69038bf613a",
+            "qt": "44c22cee-9260-413d-a4ef-6f51e1ec504d",
+            "qp": 1
+          },
+          {
+            "qe": "562848c3-32a0-421f-a3b9-8c1ffc0244dd",
+            "qt": "f852de0e-3fde-49fa-b6dd-f05cb1892228",
+            "qp": 1
+          },
+          {
+            "qe": "475630ce-05f7-4539-9269-ceaba85eaaad",
+            "qt": "9068f49b-2bb0-4e77-a577-d8457b985c36",
+            "qp": 1
+          },
+          {
+            "qe": "913ae5d7-b9f9-45ca-afb2-356e044f8feb",
+            "qt": "39f53457-ee37-46f6-ba3f-b8a281ac8cb4",
+            "qp": 1
+          },
+          {
+            "qe": "52b86717-51ea-42b6-b7ad-37deb6b4b981",
+            "qt": "b8c33afb-d865-4ef7-8286-673f44b0d5d0",
+            "qp": 1
+          },
+          {
+            "qe": "8713247f-0d18-478f-9f1f-c66df0a1f1f2",
+            "qt": "ac7041df-fcc6-4ab8-92d1-64aec6f106c5",
+            "qp": 1
+          },
+          {
+            "qe": "95c9fac6-e6c1-4769-ac3b-e5e49932e7a0",
+            "qt": "9781c88f-4865-4a71-a5f2-6c12f6979046",
+            "qp": 1
+          },
+          {
+            "qe": "0f4ecea0-3df4-4b6d-9e5c-d4167cf323dd",
+            "qt": "a1cec406-9f5d-4493-b25b-37e728014c3e",
+            "qp": 1
+          },
+          {
+            "qe": "d47b3771-bd08-42b6-922c-94af6c956c21",
+            "qt": "f6e6249e-27eb-4886-9009-0b2cae636abe",
+            "qp": 1
+          },
+          {
+            "qe": "1bccc614-dd68-48fe-a678-0a6a0073aefe",
+            "qt": "f140eef3-f900-46b5-8639-32a314c38e89",
+            "qp": 1
+          },
+          {
+            "qe": "9c01e5f4-e2eb-42a0-9fa0-9f7fc50dd680",
+            "qt": "e8f8f71f-df92-494e-80dc-d0eeada307f3",
+            "qp": 1
+          },
+          {
+            "qe": "afa76a5d-9585-4938-807d-22e1ba71fb54",
+            "qt": "d5e71d72-6242-4c5e-b029-4044194a96cb",
+            "qp": 1
+          },
+          {
+            "qe": "76b9cdaa-b5ae-4ef7-8358-5e1eab6fdd46",
+            "qt": "93b72d69-3d54-4c2c-afd7-c1f67cedcca2",
+            "qp": 1
+          },
+          {
+            "qe": "6d49b7aa-22a8-4d73-8ab9-73521f92c0ed",
+            "qt": "22569e34-22a6-43ee-a68d-ebf186391e00",
+            "qp": 1
+          },
+          {
+            "qe": "3144532e-8c9d-4a46-aaac-2d1240647091",
+            "qt": "f3eb8428-4de8-4b25-b7c4-e827c873d3a7",
+            "qp": 1
+          },
+          {
+            "qe": "a6ab8365-2a68-4d18-9c21-99d107f0ccad",
+            "qt": "a4f9b4c8-8952-45f9-81d6-fcdd45c1618b",
+            "qp": 1
+          },
+          {
+            "qe": "15733479-af7e-4934-8bf0-c799cda31aa8",
+            "qt": "e4c1ef22-c5d4-4d1c-934c-4db44ccb5d66",
+            "qp": 1
+          },
+          {
+            "qe": "6b943ea3-cb9f-40de-a9ce-820dd3daaa94",
+            "qt": "b28aa354-53a8-4614-a9db-2070ed1a07cf",
+            "qp": 1
+          },
+          {
+            "qe": "8ddd360e-f5ff-4270-8e37-a3ea5d6569b1",
+            "qt": "0d84a0aa-8bc8-4dcf-b6ac-6e22f25082bd",
+            "qp": 1
+          },
+          {
+            "qe": "1840b7e2-1afd-4228-9d94-f0353ae56589",
+            "qt": "0a32be81-54c8-4d39-b680-af692b8f18c9",
+            "qp": 1
+          },
+          {
+            "qe": "92c313eb-1382-4edb-bda6-e711c2926982",
+            "qt": "e56d83fd-1771-4842-8412-d515b92ef3a2",
+            "qp": 1
+          },
+          {
+            "qe": "a823a1e8-9e53-42b3-ac7d-78a1a9a6ed8f",
+            "qt": "b1f66b2b-3b9f-4ed9-929a-9f487636d595",
+            "qp": 1
+          },
+          {
+            "qe": "6ca9eee6-d084-4371-9ac5-260d392dea87",
+            "qt": "f7adfedd-3ec3-4a73-b909-27842bb8a6c0",
+            "qp": 1
+          },
+          {
+            "qe": "ae7aab35-7316-444a-9fe5-ce6536ef439a",
+            "qt": "70e0739d-1fb7-4d84-918d-3c5faa3351bd",
+            "qp": 1
+          },
+          {
+            "qe": "f93947eb-089d-4093-9877-caab41d7d293",
+            "qt": "49b832b4-83b6-4094-9335-fade9d56ba4f",
+            "qp": 1
+          },
+          {
+            "qe": "520d4a45-6c00-47e2-8da9-d69a58eaaf18",
+            "qt": "56d52d15-81b9-40ff-b46f-37152cb90805",
+            "qp": 1
+          },
+          {
+            "qe": "b966de66-857d-4fc4-b220-a4484cb24890",
+            "qt": "60ebb30f-deaa-4edf-a54c-8b685c005ca6",
+            "qp": 1
+          }
+        ]
+      },
+      "computedFlags": {
+        "EARLY_ACCESS_ENABLED": true,
+        "GLOBAL_UNIFIED_LIST_ENABLED": true,
+        "TARGET_CIRCLE_MULTI_MILESTONE_GAME_ENABLED": true,
+        "AUTH_AT_EDGE_ENABLED": true,
+        "VIRTUAL_BUNDLE_COMPLEMENTARY_ENABLED": true,
+        "PPO_UPSELL_BANNER": true,
+        "SHOW_VISIBILITY_PREFERENCES": true,
+        "SHOW_BRAND_PREFERENCES": true,
+        "3d-maintenance-screen": true,
+        "ENABLED_SHARE_LIST": true,
+        "SHOPPING_LIST_ENABLED": true,
+        "UPDATE_360_LINK": true,
+        "STRIKETHROUGH_PRICING_ENABLED": true,
+        "VIRTUAL_BUNDLE_MULTIPACK_ENABLED": true,
+        "PDP_DEALS_AND_BENEFITS_HEADING_ENABLED": true,
+        "SWITCH_DESIRABILITY_CUES_WITH_ORNAMENTS": true,
+        "UPGRADE_MEMBERSHIP_ENABLED": true,
+        "VE_APP_REPORTS_ENABLED": true,
+        "LIST_AND_FAV_ENABLED": true,
+        "STRIKETHROUGH_PHASE_TWO_ENABLED": true,
+        "SHOW_REGISTRY_PRIVATE_ITEMS": false,
+        "TOSS-UPLOADS-ENABLED": false,
+        "GLOBAL_BUY_NOW_FROM_PDP_ENABLED": true,
+        "GLOBAL_BUY_NOW_REFACTOR_ENABLED": true,
+        "GLOBAL_PDP_FULFILLMENT_ALL_CHILDREN_ENABLED": true,
+        "HOLIDAY_GIFT_FINDER_ENABLED": true,
+        "ENABLE_JOBS_FEATURE_FLAG": true,
+        "ONE_DAY_DELIVERY_ENABLED": true,
+        "SPEEDCURVE_ENABLED": true,
+        "BUY_NOW_SIMPLIFIED_PLANS_ENABLED": true,
+        "AI-TO-DRM-PUBLISH": false,
+        "AI_CLASSIFICATION_FEATURE_FLAG": true,
+        "ASSET-REUSEABLE-FLAG": true,
+        "BYPASS-SIGNATURE-CHECK": true,
+        "FETCH-ID-FROM-REQUEST": true,
+        "PDP_COMPARE_SIMILAR_ITEMS_ENABLED": true,
+        "EXP_TARGET_CIRCLE_DEALS_PAGE_ENABLED": true,
+        "MEASURE_DISPLAY_NAME_PERFORMANCE_ENABLED": true,
+        "social_proofing_enabled": true,
+        "EXP_PDP_DEALS_LINK_TEXT_ENABLED": true
+      },
+      "computedVariants": {
+        "EXP_PDP_DEALS_LINK_TEXT": "DPLP_SHOW_ITEMS_AND_DETAILS",
+        "bestseller_halloween_factor": "halloween"
+      }
+    },
+    "visitorId": "0199E864E5EC0201B6DD809A181AA331"
+  },
+  "page": "/p/[...subpath]",
+  "query": {
+    "subpath": [
+      "unique-loom-outdoor-botanical-gate-border-woven-area-rug",
+      "-",
+      "A-1000006800"
+    ]
+  },
+  "buildId": "f932fe86636b00f1b878d3debba083f9c12c4cdc-standard",
+  "assetPrefix": "https://assets.targetimg1.com/webui/top-of-funnel",
+  "isFallback": false,
+  "isExperimentalCompile": false,
+  "dynamicIds": [
+    9708,
+    38504,
+    66181,
+    22349,
+    91724,
+    74132,
+    38848,
+    78145,
+    76463,
+    24662,
+    67980,
+    31228,
+    60269,
+    82040,
+    10180,
+    1694,
+    15684,
+    80078,
+    17332,
+    30048,
+    39219,
+    89644,
+    45290,
+    67884,
+    34012,
+    48460,
+    29510,
+    34332,
+    59378,
+    30226,
+    25130
+  ],
+  "gip": true,
+  "appGip": true,
+  "scriptLoader": []
+}

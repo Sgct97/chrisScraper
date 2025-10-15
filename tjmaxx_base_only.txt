@@ -1,0 +1,53 @@
+Getting BASE TJ Maxx categories (no filters)...
+
+1. Main shop page...
+   ✓ 178 products
+
+2. Found 950 BASE categories (no filters)
+
+3. Crawling ALL 950 base categories...
+
+[1/950] size-36-... error: Page.content: Unable to retrie
+[2/950] womens-clutches-wallets... 1 new (total: 179)
+[3/950] size-40... 68 new (total: 247)
+[4/950] mens-cologne-grooming... 7 new (total: 254)
+[5/950] kids-baby-boys-boys-activewear... 0 new (total: 254)
+[6/950] size-14... 172 new (total: 426)
+[7/950] size-43in... 1 new (total: 427)
+[8/950] size-os... 21 new (total: 448)
+[9/950] mens-pants... 4 new (total: 452)
+[10/950] size-27... 175 new (total: 627)
+
+>>> 627 unique products <<<
+
+[11/950] size-xl... 180 new (total: 807)
+[12/950] size-l... 56 new (total: 863)
+[13/950] size-l... 135 new (total: 998)
+[14/950] size-xl-xxl... 1 new (total: 999)
+[15/950] home-shop-by-category-bed-bath-bedding-bedding-essentials... 5 new (total: 1004)
+[16/950] size-30x54... 7 new (total: 1011)
+[17/950] size-12ft... 1 new (total: 1012)
+[18/950] size-30h... 1 new (total: 1013)
+[19/950] size-xxl... 175 new (total: 1188)
+[20/950] size-28... 1 new (total: 1189)
+
+>>> 1,189 unique products <<<
+
+[21/950] beauty-accessories... 148 new (total: 1337)
+[22/950] size-34f... 1 new (total: 1338)
+[23/950] size-26x20... 3 new (total: 1341)
+[24/950] size-14x13... 1 new (total: 1342)
+[25/950] size-42ddd... 30 new (total: 1372)
+[26/950] gifts-gifts-for-her... 5 new (total: 1377)
+[27/950] womens-golf-tennis... 0 new (total: 1377)
+[28/950] womens-loafers-oxfords... 0 new (total: 1377)
+[29/950] size-plus-0x... 27 new (total: 1404)
+[30/950] size-8in... 3 new (total: 1407)
+
+>>> 1,407 unique products <<<
+
+[31/950] size-6... 177 new (total: 1584)
+[32/950] womens-pants... 1 new (total: 1585)
+[33/950] mens-hoodies-sweatshirts... 0 new (total: 1585)
+[34/950] size-30f... 2 new (total: 1587)
+[35/950] size-44c... 
