@@ -3,7 +3,7 @@ services:
     name: retail-scraper-worker
     runtime: python
     plan: starter  # Can upgrade to standard/pro as needed
-    buildCommand: pip install -r requirements.txt && playwright install chromium
+    buildCommand: pip install -r requirements.txt && playwright install --with-deps chromium
     startCommand: python main.py --retailers target --no-resume
     envVars:
       - key: PYTHONUNBUFFERED
