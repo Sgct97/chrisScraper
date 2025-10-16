@@ -11,15 +11,15 @@ from datetime import datetime
 
 # Configuration - UPDATE THESE
 CONFIG = {
-    'instance_type': 'r6i.4xlarge',  # 128GB RAM, 16 vCPU
-    'max_price': '0.30',  # Max $/hour for Spot
+    'instance_type': 'm6i.2xlarge',  # 32GB RAM, 8 vCPU (better Spot availability)
+    'max_price': '0.15',  # Max $/hour for Spot
     'region': 'us-east-1',
     'ami_id': 'ami-0341d95f75f311023',  # Amazon Linux 2023
     'key_name': 'scraper-key',  # Your EC2 key pair name
     'security_group_id': 'sg-06cb555b4b2ec6c99',  # Your security group ID
     'subnet_id': 'subnet-07b5d70ad34e00a01',  # Your subnet ID
     'volume_size_gb': 100,
-    'target_concurrency': 150,
+    'target_concurrency': 50,  # Conservative for 32GB (use 150 with 128GB)
 }
 
 # Startup script that runs on the instance
@@ -49,7 +49,7 @@ python3.11 -m playwright install chromium
 sudo python3.11 -m playwright install-deps
 
 # Create data directory
-sudo mkdir -p /data/{exports,manifests}
+sudo mkdir -p /data/exports /data/manifests
 sudo chown -R ec2-user:ec2-user /data
 
 # Set environment

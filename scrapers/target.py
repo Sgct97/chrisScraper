@@ -225,9 +225,9 @@ class TargetScraper(BaseScraper):
             pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin={tcin}&pricing_store_id=2064&store_id=2064&channel=WEB'
             product_data = await self.fetch_json(pdp_api_url, headers=api_headers)
             
-            # If API returns no data, product might be marketplace seller - try browser fallback
+            # If API returns no data, product is discontinued/not found - skip it
             if not product_data or not product_data.get('data', {}).get('product'):
-                return {'status': 'needs_browser'}  # Signal to use browser scraping
+                return {'status': 'not_found'}  # Product doesn't exist (404)
             
             # 2. Get fulfillment data (shipping estimate & cost)
             # Use central US ZIP for consistent nationwide estimates (50000 = Des Moines, IA)
