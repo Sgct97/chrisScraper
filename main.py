@@ -528,10 +528,11 @@ class RetailScraper:
             try:
                 # Check if manifest exists
                 import glob
-                manifests = sorted(glob.glob(f"manifests/manifest_{retailer}_*.csv"))
+                manifest_dir = self.config['manifests_dir']
+                manifests = sorted(glob.glob(f"{manifest_dir}/manifest_{retailer}_*.csv"))
                 
-                # Use manifest if: skip-enum flag OR (max-items set AND manifest exists)
-                use_manifest = CONFIG.get('skip_enum') or (CONFIG.get('max_items') and manifests)
+                # Use manifest if: skip-enum flag OR (max-items set AND manifest exists) OR resuming with existing manifest
+                use_manifest = CONFIG.get('skip_enum') or (CONFIG.get('max_items') and manifests) or (resume and manifests)
                 
                 if use_manifest and manifests:
                     manifest_path = manifests[-1]
