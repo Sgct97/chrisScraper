@@ -14,6 +14,8 @@ class ProxyManager:
         self.proxy_config = config['proxy']
         self.enabled = self.proxy_config['enabled']
         self.datacenter_pool = self.proxy_config.get('datacenter_pool')
+        self.isp_pool = self.proxy_config.get('isp_pool', [])
+        self.current_proxy_index = 0
         
         # Tracking for auto-escalation
         self.request_count = 0
@@ -22,22 +24,35 @@ class ProxyManager:
         self.last_reset_time = datetime.now()
         self.window_duration = timedelta(minutes=5)
         
+        # Log proxy configuration
+        if self.isp_pool:
+            print(f"✓ Loaded {len(self.isp_pool)} ISP proxies")
+            print(f"  Proxy mode: {'ENABLED' if self.enabled else 'STANDBY (will auto-enable if blocked)'}")
+        
     def is_enabled(self) -> bool:
         """Check if proxy is currently enabled."""
         return self.enabled
     
     def get_proxy_url(self) -> Optional[str]:
-        """Get proxy URL if enabled."""
-        if self.enabled and self.datacenter_pool:
+        """Get proxy URL if enabled (rotates through ISP pool)."""
+        if not self.enabled:
+            return None
+        
+        # Prefer ISP pool over single datacenter proxy
+        if self.isp_pool:
+            proxy = self.isp_pool[self.current_proxy_index]
+            self.current_proxy_index = (self.current_proxy_index + 1) % len(self.isp_pool)
+            return proxy
+        elif self.datacenter_pool:
             return self.datacenter_pool
+        
         return None
     
     def get_proxy_dict(self) -> Optional[Dict[str, str]]:
         """Get proxy dictionary for httpx/playwright."""
-        if self.enabled and self.datacenter_pool:
-            return {
-                'server': self.datacenter_pool,
-            }
+        proxy_url = self.get_proxy_url()
+        if proxy_url:
+            return {'server': proxy_url}
         return None
     
     def record_request(self, success: bool, is_block: bool = False):
@@ -65,7 +80,7 @@ class ProxyManager:
         if self.enabled:
             return False  # Already enabled
         
-        if not self.datacenter_pool:
+        if not self.datacenter_pool and not self.isp_pool:
             return False  # No proxy configured
         
         # Check threshold conditions

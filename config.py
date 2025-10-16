@@ -25,11 +25,15 @@ CONFIG = {
         'max': 500
     },
     
-    # Proxy settings - DISABLED by default, only enable when blocked
+    # Proxy settings - ISP proxies from Oxylabs
     'proxy': {
-        'enabled': False,  # Start on HOME NETWORK
+        'enabled': os.getenv('USE_PROXIES', 'false').lower() == 'true',  # Set USE_PROXIES=true to enable
         'auto_enable_on_blocks': True,  # Auto-switch when threshold hit
-        'datacenter_pool': None,  # Set "http://user:pass@proxy:port" if you have credentials
+        'datacenter_pool': None,  # Legacy single proxy (not used with ISP pool)
+        'isp_pool': [
+            f"http://{os.getenv('PROXY_USER', '')}:{os.getenv('PROXY_PASS', '')}@isp.oxylabs.io:{port}"
+            for port in range(8001, 8011)
+        ] if os.getenv('PROXY_USER') and os.getenv('PROXY_PASS') else [],
         'switch_threshold_percent': 2.0,  # Switch if >2% blocks in 5min
         'switch_threshold_count': 10  # Or 10+ consecutive failures
     },
