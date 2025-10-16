@@ -8,6 +8,7 @@ import asyncio
 from datetime import datetime
 from typing import List, Dict
 import sys
+import json
 
 from config import CONFIG, RETAILERS
 from database import Database
@@ -174,7 +175,7 @@ class RetailScraper:
                     print(f"Processing batch {batch_num} ({len(batch):,} products)")
                     print(f"{'='*60}")
                     
-                    await self._scrape_batch(scraper, batch, run_id, progress, concurrency)
+                    await self._scrape_batch(scraper, batch, run_id, progress, concurrency, retailer)
                     total_processed += len(batch)
                     batch = []  # Clear batch from memory
             
@@ -206,7 +207,7 @@ class RetailScraper:
         print(f"  Blocked: {stats['blocked']}")
         print(f"  Not Found: {stats['not_found']}")
     
-    async def _scrape_batch(self, scraper, batch: List[Dict[str, str]], run_id: int, progress: ProgressTracker, concurrency: int):
+    async def _scrape_batch(self, scraper, batch: List[Dict[str, str]], run_id: int, progress: ProgressTracker, concurrency: int, retailer: str):
         """Scrape a single batch of products."""
         semaphore = asyncio.Semaphore(concurrency)
         
@@ -221,6 +222,16 @@ class RetailScraper:
         
         tasks = [scrape_with_limit(p) for p in batch]
         await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Export progress every 1000 items (live update - overwrites same file)
+        if not hasattr(self, '_items_since_export'):
+            self._items_since_export = 0
+        
+        self._items_since_export += len(batch)
+        
+        if self._items_since_export >= 1000:
+            self.exporter.export_retailer_data(retailer, live_update=True)
+            self._items_since_export = 0
     
     async def scrape_products(self, retailer: str, products: List[Dict[str, str]], resume: bool = True, max_items: int = None):
         """Scrape all products for a retailer."""
@@ -241,7 +252,7 @@ class RetailScraper:
         
         # Apply max_items limit if specified (for testing)
         if max_items:
-            print(f"⚠️  TEST MODE: Limiting to {max_items} products\n")
+            print(f"[TEST MODE] Limiting to {max_items} products\n")
             products = products[:max_items]
         
         if not products:
@@ -298,9 +309,19 @@ class RetailScraper:
         retailer = scraper.retailer_name
         
         try:
+            # Check if we're getting blocked and need to pause
+            if self.proxy_manager.consecutive_failures >= 5:
+                # Pause for exponential backoff before potentially switching to proxy
+                backoff_seconds = min(60, 5 * (2 ** (self.proxy_manager.consecutive_failures - 5)))
+                print(f"\n\n[WARNING] High failure rate detected! Pausing for {backoff_seconds} seconds to avoid further blocks...")
+                await asyncio.sleep(backoff_seconds)
+                print(f"[OK] Resuming scraping...\n")
+            
             # Check if we should enable proxy
             if self.proxy_manager.should_enable_proxy():
+                print(f"\n\n[SWITCHING] Block rate threshold exceeded! Switching to proxy mode...")
                 self.proxy_manager.enable_proxy(reason="Block rate threshold exceeded")
+                print(f"[OK] Now using proxy. Resuming scraping...\n")
             
             # Scrape product
             product_data = await scraper.scrape_product(product_url, product_id)
@@ -319,6 +340,31 @@ class RetailScraper:
                 # Success
                 product_data['scrape_run_id'] = run_id
                 self.database.insert_product(product_data)
+                
+                # Check for missing critical fields and track for re-scraping
+                missing_fields = []
+                critical_fields = {
+                    'price_current': 'price',
+                    'title': 'title',
+                    'brand': 'brand',
+                    'shipping_estimate': 'shipping_estimate',
+                    'description': 'description'
+                }
+                
+                for field, display_name in critical_fields.items():
+                    if not product_data.get(field):
+                        missing_fields.append(display_name)
+                
+                # Log if ANY critical field is missing
+                if missing_fields:
+                    self.database.log_incomplete_product(
+                        product_data.get('product_id'),
+                        retailer,
+                        product_url,
+                        missing_fields,
+                        run_id
+                    )
+                
                 progress.record_success()
             
             # Print progress
@@ -331,6 +377,8 @@ class RetailScraper:
                 retailer, product_url, 'exception', 
                 str(e), run_id
             )
+            # CRITICAL: Add delay to prevent runaway error loops
+            await asyncio.sleep(1)
     
     async def run_enumeration_only(self, retailers: List[str] = None):
         """Run enumeration only (no scraping) to prove completeness."""
@@ -468,6 +516,32 @@ class RetailScraper:
         # Print summary
         self.exporter.print_summary(self.retailer_runs)
         
+        # Print incomplete products summary
+        print(f"\n{'='*80}")
+        print("INCOMPLETE PRODUCTS (Need Re-scraping)")
+        print(f"{'='*80}\n")
+        
+        for retailer in retailers:
+            incomplete = self.database.get_incomplete_products(retailer=retailer)
+            if incomplete:
+                print(f"{retailer.upper()}: {len(incomplete):,} products missing data")
+                # Count what fields are most commonly missing
+                field_counts = {}
+                for item in incomplete:
+                    fields = json.loads(item['missing_fields'])
+                    for field in fields:
+                        field_counts[field] = field_counts.get(field, 0) + 1
+                
+                print(f"  Most common missing fields:")
+                for field, count in sorted(field_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
+                    print(f"    - {field}: {count:,} products")
+            else:
+                print(f"{retailer.upper()}: 0 products (all complete!)")
+            print()
+        
+        print("To re-scrape incomplete products, run:")
+        print("  python rescrape_incomplete.py --retailer target")
+        
         print(f"\n{'='*80}")
         print("✓ SCRAPE COMPLETE")
         print(f"{'='*80}\n")
@@ -507,7 +581,7 @@ async def main():
     scraper = RetailScraper()
     
     if args.test:
-        print("\n⚠️  TEST MODE: Limited enumeration for validation\n")
+        print("\n[TEST MODE] Limited enumeration for validation\n")
         # In test mode, scrapers will limit enumeration (already set in code with [:5], [:10] slices)
     
     if args.enumerate_only:

@@ -88,6 +88,19 @@ class Database:
                 )
             """)
             
+            # Incomplete products table - tracks products needing re-scrape
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS incomplete_products (
+                    product_id TEXT PRIMARY KEY,
+                    retailer TEXT NOT NULL,
+                    product_url TEXT NOT NULL,
+                    missing_fields TEXT,  -- JSON array of missing field names
+                    scraped_at TIMESTAMP,
+                    scrape_run_id INTEGER,
+                    rescrape_attempted BOOLEAN DEFAULT 0
+                )
+            """)
+            
             conn.commit()
     
     @contextmanager
@@ -168,6 +181,39 @@ class Database:
             """, (retailer, product_url, error_type, error_message, 
                   html_snapshot, datetime.now(), scrape_run_id))
             conn.commit()
+    
+    def log_incomplete_product(self, product_id: str, retailer: str, product_url: str, 
+                               missing_fields: List[str], scrape_run_id: int):
+        """Track products with missing critical data for later re-scraping."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO incomplete_products 
+                (product_id, retailer, product_url, missing_fields, scraped_at, scrape_run_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (product_id, retailer, product_url, json.dumps(missing_fields), 
+                  datetime.now(), scrape_run_id))
+            conn.commit()
+    
+    def get_incomplete_products(self, retailer: str = None, rescrape_attempted: bool = False) -> List[Dict]:
+        """Get products that need re-scraping."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if retailer:
+                cursor.execute("""
+                    SELECT * FROM incomplete_products 
+                    WHERE retailer = ? AND rescrape_attempted = ?
+                    ORDER BY scraped_at DESC
+                """, (retailer, 1 if rescrape_attempted else 0))
+            else:
+                cursor.execute("""
+                    SELECT * FROM incomplete_products 
+                    WHERE rescrape_attempted = ?
+                    ORDER BY scraped_at DESC
+                """, (1 if rescrape_attempted else 0,))
+            
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
     
     def get_products_by_retailer(self, retailer: str) -> List[Dict]:
         """Get all products for a retailer."""

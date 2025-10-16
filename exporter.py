@@ -18,28 +18,41 @@ class Exporter:
         self.export_dir = ensure_directory(config['export_dir'])
         self.manifests_dir = ensure_directory(config['manifests_dir'])
     
-    def export_retailer_data(self, retailer: str):
-        """Export all data for a retailer to JSON and CSV."""
-        timestamp = format_timestamp()
+    def export_retailer_data(self, retailer: str, live_update: bool = False):
+        """Export all data for a retailer to JSON and CSV.
         
+        Args:
+            retailer: Retailer name
+            live_update: If True, overwrites same file for live monitoring.
+        """
         # Get products from database
         products = self.database.get_products_by_retailer(retailer)
         
         if not products:
-            print(f"⚠️  No products found for {retailer}")
+            if not live_update:
+                print(f"⚠️  No products found for {retailer}")
             return
         
+        if live_update:
+            # For live monitoring - overwrite same file
+            json_path = self.export_dir / f"LIVE_{retailer}.json"
+            csv_path = self.export_dir / f"LIVE_{retailer}.csv"
+        else:
+            # For final export - timestamped file
+            timestamp = format_timestamp()
+            json_path = self.export_dir / f"export_{retailer}_{timestamp}.json"
+            csv_path = self.export_dir / f"export_{retailer}_{timestamp}.csv"
+        
         # Export JSON
-        json_path = self.export_dir / f"export_{retailer}_{timestamp}.json"
         export_to_json(products, str(json_path))
         
         # Export CSV
-        csv_path = self.export_dir / f"export_{retailer}_{timestamp}.csv"
         export_to_csv(products, str(csv_path))
         
-        print(f"\n✓ Exported {retailer} data:")
-        print(f"  - JSON: {json_path}")
-        print(f"  - CSV: {csv_path}")
+        if not live_update:
+            print(f"\n✓ Exported {retailer} data:")
+            print(f"  - JSON: {json_path}")
+            print(f"  - CSV: {csv_path}")
     
     def export_all_retailers(self):
         """Export data for all retailers."""

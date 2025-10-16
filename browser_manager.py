@@ -34,7 +34,7 @@ class BrowserManager:
         }
         
         self.browser = await self.playwright.chromium.launch(**launch_options)
-        print("✓ Browser initialized")
+        print("[OK] Browser initialized")
     
     async def create_context(self, retailer: str = None) -> BrowserContext:
         """Create a new browser context with stealth settings."""
@@ -140,5 +140,5 @@ class BrowserManager:
         if self.playwright:
             await self.playwright.stop()
         
-        print("✓ Browser cleanup complete")
+        print("[OK] Browser cleanup complete")
 

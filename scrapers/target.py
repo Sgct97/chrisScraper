@@ -220,8 +220,9 @@ class TargetScraper(BaseScraper):
             }
             
             # 1. Get main product data
-            # Use channel=WEB for national online pricing (not store-specific)
-            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin={tcin}&channel=WEB&is_bot=false'
+            # pricing_store_id is REQUIRED (GraphQL NonNull parameter)
+            # Using store 2064 (what Target.com uses for online browsing)
+            pdp_api_url = f'https://redsky.target.com/redsky_aggregations/v1/web/pdp_client_v1?key=9f36aeafbe60771e321a7cc95a78140772ab3e96&tcin={tcin}&pricing_store_id=2064&store_id=2064&channel=WEB'
             product_data = await self.fetch_json(pdp_api_url, headers=api_headers)
             
             # If API returns no data, product might be marketplace seller - try browser fallback
@@ -269,10 +270,12 @@ class TargetScraper(BaseScraper):
             # Brand is in primary_brand, not product_brand
             brand = item.get('primary_brand', {}).get('name')
             
-            # Price
+            # Price - handle both single products and variants
             price_obj = product.get('price', {})
-            price_current = price_obj.get('current_retail')
-            price_compare = price_obj.get('reg_retail') or price_obj.get('comparison_price')
+            # For products with variants (different sizes/colors), use min price
+            price_current = price_obj.get('current_retail') or price_obj.get('current_retail_min')
+            # For compare-at price, check reg_retail, then reg_retail_max (for variants)
+            price_compare = price_obj.get('reg_retail') or price_obj.get('reg_retail_max') or price_obj.get('comparison_price')
             
             # Images
             images = product.get('item', {}).get('enrichment', {}).get('images', {})
@@ -297,6 +300,19 @@ class TargetScraper(BaseScraper):
                     alternate_images.append(img)
             
             all_images = [primary_image] + alternate_images if primary_image else alternate_images
+            
+            # Convert Target image IDs to full URLs
+            # Target uses image IDs like "GUEST_xxx" that need CDN prefix
+            full_image_urls = []
+            for img in all_images:
+                if img:
+                    # If it's just an ID (starts with GUEST_ or similar), build full URL
+                    if not img.startswith('http'):
+                        full_image_urls.append(f'https://target.scene7.com/is/image/Target/{img}')
+                    else:
+                        full_image_urls.append(img)
+            
+            all_images = full_image_urls
             
             # Description
             desc_obj = product.get('item', {}).get('product_description', {})
