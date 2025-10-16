@@ -9,14 +9,14 @@ CONFIG = {
     # Location settings for price/availability
     'zip_code': '90210',  # Default ZIP code - user should update this
     
-    # Concurrency optimized for 8GB RAM (Target uses lightweight API calls)
-    # Target: 25 concurrent starting point, can increase to 50 if no blocks after 50k products
-    # Others: 4 concurrent (browser-heavy, 150MB each = 600MB max)
+    # Concurrency optimized for 64GB RAM (AWS Spot r6i.4xlarge: 128GB, 16 vCPU)
+    # Target uses lightweight API calls (~5MB RAM each) = can handle 100-150 concurrent
+    # Others use browser automation (~150-200MB each) = 4-8 concurrent safe
     'concurrency': {
-        'target': 25,      # Conservative start - increase if stable after monitoring
-        'costco': 4,       # Cloudflare + anti-bot
-        'homegoods': 4,    # Lighter protection
-        'tjmaxx': 4        # Lighter protection
+        'target': int(os.getenv('TARGET_CONCURRENCY', '100')),  # High concurrency for API-based scraping
+        'costco': int(os.getenv('COSTCO_CONCURRENCY', '6')),    # Browser-heavy, Cloudflare protection
+        'homegoods': int(os.getenv('HOMEGOODS_CONCURRENCY', '6')),  # Browser-heavy
+        'tjmaxx': int(os.getenv('TJMAXX_CONCURRENCY', '6'))     # Browser-heavy, residential proxy needed
     },
     
     # Rate limiting - conservative for home IP

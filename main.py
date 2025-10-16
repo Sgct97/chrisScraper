@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Dict
 import sys
 import json
+import os
 
 from config import CONFIG, RETAILERS
 from database import Database
@@ -19,6 +20,13 @@ from utils import ensure_directory, export_manifest, format_timestamp, ProgressT
 from exporter import Exporter
 
 from scrapers import TargetScraper, CostcoScraper, HomeGoodsScraper, TJMaxxScraper
+
+# Import Spot monitoring if available (only on AWS)
+try:
+    from spot_monitor import run_with_spot_monitoring, GracefulShutdown
+    SPOT_MONITORING_AVAILABLE = True
+except ImportError:
+    SPOT_MONITORING_AVAILABLE = False
 
 
 class RetailScraper:
@@ -41,6 +49,26 @@ class RetailScraper:
         }
         
         self.retailer_runs = {}  # Track scrape run IDs
+    
+    async def cleanup(self):
+        """Graceful cleanup on shutdown (for Spot interruptions)."""
+        print("\n[CLEANUP] Closing browser connections and saving state...")
+        try:
+            await self.browser_manager.cleanup()
+            print("[CLEANUP] Browser manager closed")
+            
+            # Export current data
+            print("[CLEANUP] Exporting current progress...")
+            for retailer in self.retailer_runs.keys():
+                try:
+                    self.exporter.export_retailer_data(retailer, live_update=True)
+                    print(f"[CLEANUP] Exported {retailer} data")
+                except Exception as e:
+                    print(f"[CLEANUP] Failed to export {retailer}: {e}")
+            
+            print("[CLEANUP] ✓ Cleanup complete. Database saved. Safe to terminate.")
+        except Exception as e:
+            print(f"[CLEANUP] Error during cleanup: {e}")
     
     def _get_already_scraped(self, retailer: str) -> set:
         """Get set of product IDs already scraped for this retailer."""
@@ -309,16 +337,30 @@ class RetailScraper:
         retailer = scraper.retailer_name
         
         try:
-            # Check if we're getting blocked and need to pause
-            if self.proxy_manager.consecutive_failures >= 5:
-                # Pause for exponential backoff before potentially switching to proxy
-                backoff_seconds = min(60, 5 * (2 ** (self.proxy_manager.consecutive_failures - 5)))
-                print(f"\n\n[WARNING] High failure rate detected! Pausing for {backoff_seconds} seconds to avoid further blocks...")
-                await asyncio.sleep(backoff_seconds)
-                print(f"[OK] Resuming scraping...\n")
+            # Check if we're getting blocked too much - STOP if no proxy configured
+            if self.proxy_manager.consecutive_failures >= 10:
+                print(f"\n\n{'='*80}")
+                print(f"⚠️  STOPPING: Too many consecutive failures ({self.proxy_manager.consecutive_failures})")
+                print(f"{'='*80}")
+                print(f"This usually means we're getting blocked by Target.")
+                print(f"")
+                print(f"Options:")
+                print(f"  1. Add proxies to config.py and restart")
+                print(f"  2. Wait 30-60 minutes and try lower concurrency")
+                print(f"")
+                print(f"Progress saved! Run again to resume.")
+                print(f"{'='*80}\n")
+                # Exit gracefully - scraper will resume from database on restart
+                sys.exit(1)
             
-            # Check if we should enable proxy
-            if self.proxy_manager.should_enable_proxy():
+            # Pause on moderate failures
+            if self.proxy_manager.consecutive_failures >= 5:
+                backoff_seconds = min(60, 5 * (2 ** (self.proxy_manager.consecutive_failures - 5)))
+                print(f"\n[WARNING] High failure rate ({self.proxy_manager.consecutive_failures} consecutive)! Pausing {backoff_seconds}s...\n")
+                await asyncio.sleep(backoff_seconds)
+            
+            # Check if we should enable proxy (only if proxy is configured)
+            if self.proxy_manager.should_enable_proxy() and CONFIG['proxy'].get('datacenter_pool'):
                 print(f"\n\n[SWITCHING] Block rate threshold exceeded! Switching to proxy mode...")
                 self.proxy_manager.enable_proxy(reason="Block rate threshold exceeded")
                 print(f"[OK] Now using proxy. Resuming scraping...\n")
@@ -340,6 +382,24 @@ class RetailScraper:
                 # Success
                 product_data['scrape_run_id'] = run_id
                 self.database.insert_product(product_data)
+                
+                # Print sample product every 100 items to verify data quality
+                if progress.successful % 100 == 1:  # Print first and every 100th
+                    print(f"\n{'='*80}")
+                    print(f"SAMPLE PRODUCT #{progress.successful}")
+                    print(f"{'='*80}")
+                    print(f"ID: {product_data.get('product_id')}")
+                    print(f"Title: {product_data.get('title', 'MISSING')[:80]}")
+                    print(f"Brand: {product_data.get('brand', 'MISSING')}")
+                    print(f"Price: ${product_data.get('price_current', 'MISSING')}")
+                    print(f"Compare At: ${product_data.get('price_compare_at', 'N/A')}")
+                    print(f"Category: {product_data.get('category', 'MISSING')}")
+                    print(f"Availability: {product_data.get('availability', 'MISSING')}")
+                    print(f"Shipping: ${product_data.get('shipping_cost', 'MISSING')} - {product_data.get('shipping_estimate', 'MISSING')}")
+                    print(f"Images: {len(product_data.get('image_urls', '[]').split(',')) if product_data.get('image_urls') else 0} images")
+                    print(f"Rating: {product_data.get('ratings_average', 'N/A')} ({product_data.get('ratings_count', 0)} reviews)")
+                    print(f"Description: {(product_data.get('description', 'MISSING') or '')[:100]}...")
+                    print(f"{'='*80}\n")
                 
                 # Check for missing critical fields and track for re-scraping
                 missing_fields = []
@@ -584,11 +644,27 @@ async def main():
         print("\n[TEST MODE] Limited enumeration for validation\n")
         # In test mode, scrapers will limit enumeration (already set in code with [:5], [:10] slices)
     
-    if args.enumerate_only:
-        await scraper.run_enumeration_only(retailers=args.retailers)
+    # Check if we're on AWS Spot instance
+    use_spot_monitoring = os.getenv('AWS_SPOT_INSTANCE', 'false').lower() == 'true'
+    
+    if use_spot_monitoring and SPOT_MONITORING_AVAILABLE:
+        print("\n[AWS SPOT] Spot instance monitoring enabled")
+        print("[AWS SPOT] Will gracefully shutdown on interruption warnings")
+        print("[AWS SPOT] Progress is auto-saved - scraping will resume on restart\n")
+    
+    # Define the main scraping task
+    async def scraping_task():
+        if args.enumerate_only:
+            await scraper.run_enumeration_only(retailers=args.retailers)
+        else:
+            resume = not args.no_resume
+            await scraper.run_full_scrape(retailers=args.retailers, resume=resume)
+    
+    # Run with Spot monitoring if on AWS, otherwise run normally
+    if use_spot_monitoring and SPOT_MONITORING_AVAILABLE:
+        await run_with_spot_monitoring(scraping_task(), cleanup_callback=scraper.cleanup)
     else:
-        resume = not args.no_resume
-        await scraper.run_full_scrape(retailers=args.retailers, resume=resume)
+        await scraping_task()
 
 
 if __name__ == '__main__':
