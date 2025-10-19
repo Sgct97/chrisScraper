@@ -13,8 +13,15 @@ class ProxyManager:
         self.config = config
         self.proxy_config = config['proxy']
         self.enabled = self.proxy_config['enabled']
-        self.datacenter_pool = self.proxy_config.get('datacenter_pool')
-        self.isp_pool = self.proxy_config.get('isp_pool', [])
+        
+        # Get proxy URL based on provider
+        self.provider = self.proxy_config.get('provider', 'smartproxy')
+        if self.provider in self.proxy_config:
+            self.datacenter_pool = self.proxy_config[self.provider].get('url')
+        else:
+            self.datacenter_pool = None
+        
+        self.isp_pool = []  # Not using ISP pool rotation with Oxylabs/Smartproxy (they rotate internally)
         self.current_proxy_index = 0
         
         # Tracking for auto-escalation
@@ -25,8 +32,8 @@ class ProxyManager:
         self.window_duration = timedelta(minutes=5)
         
         # Log proxy configuration
-        if self.isp_pool:
-            print(f"✓ Loaded {len(self.isp_pool)} ISP proxies")
+        if self.datacenter_pool:
+            print(f"✓ Proxy provider: {self.provider.upper()}")
             print(f"  Proxy mode: {'ENABLED' if self.enabled else 'STANDBY (will auto-enable if blocked)'}")
         
     def is_enabled(self) -> bool:
