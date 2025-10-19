@@ -100,6 +100,24 @@ class BaseScraper(ABC):
                 
                 if response.status_code == 200:
                     return response.json()
+                elif response.status_code == 407:
+                    # Proxy authentication error - log details
+                    proxy_used = client_kwargs.get('proxy', 'None')
+                    if proxy_used and isinstance(proxy_used, str):
+                        # Sanitize password from proxy URL for logging
+                        import re
+                        sanitized = re.sub(r'://([^:]+):([^@]+)@', r'://\1:***@', proxy_used)
+                    else:
+                        sanitized = str(proxy_used)
+                    print(f"\n{'='*80}")
+                    print(f"🚨 PROXY AUTH ERROR (407)")
+                    print(f"{'='*80}")
+                    print(f"Proxy: {sanitized}")
+                    print(f"URL: {url[:100]}")
+                    print(f"Response: {response.text[:200] if response.text else 'No body'}")
+                    print(f"{'='*80}\n")
+                    self.proxy_manager.record_request(success=False, is_block=True)
+                    return None
                 elif response.status_code in [403, 429]:
                     print(f"  ⚠️  Blocked: HTTP {response.status_code} from {url[:80]}")
                     self.proxy_manager.record_request(success=False, is_block=True)
@@ -107,6 +125,22 @@ class BaseScraper(ABC):
                 else:
                     print(f"  ⚠️  HTTP {response.status_code} from {url[:80]}")
                     return None
+        except httpx.ProxyError as e:
+            proxy_used = client_kwargs.get('proxy', 'None')
+            if proxy_used and isinstance(proxy_used, str):
+                import re
+                sanitized = re.sub(r'://([^:]+):([^@]+)@', r'://\1:***@', proxy_used)
+            else:
+                sanitized = str(proxy_used)
+            print(f"\n{'='*80}")
+            print(f"🚨 PROXY CONNECTION ERROR")
+            print(f"{'='*80}")
+            print(f"Proxy: {sanitized}")
+            print(f"Error: {str(e)[:300]}")
+            print(f"URL: {url[:100]}")
+            print(f"{'='*80}\n")
+            self.proxy_manager.record_request(success=False, is_block=True)
+            return None
         except Exception as e:
             print(f"  ⚠️  Exception fetching JSON from {url[:80]}: {e}")
             import traceback
