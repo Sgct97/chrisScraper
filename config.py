@@ -29,7 +29,7 @@ CONFIG = {
     'proxy': {
         'enabled': os.getenv('USE_PROXIES', 'false').lower() == 'true',  # Set USE_PROXIES=true to enable
         'auto_enable_on_blocks': True,  # Auto-switch when threshold hit
-        'provider': os.getenv('PROXY_PROVIDER', 'smartproxy'),  # 'smartproxy' or 'oxylabs'
+        'provider': os.getenv('PROXY_PROVIDER', 'smartproxy'),  # 'smartproxy', 'oxylabs', or 'iproyal'
         
         # Smartproxy (Decodo) - UK-based, KYC required
         'smartproxy': {
@@ -39,6 +39,11 @@ CONFIG = {
         # Oxylabs - US-based alternative
         'oxylabs': {
             'url': f"http://{os.getenv('OXYLABS_USER', '')}:{os.getenv('OXYLABS_PASS', '')}@pr.oxylabs.io:7777" if os.getenv('OXYLABS_USER') and os.getenv('OXYLABS_PASS') else None,
+        },
+        
+        # IPRoyal - Residential proxies
+        'iproyal': {
+            'url': f"http://{os.getenv('IPROYAL_USER', '')}:{os.getenv('IPROYAL_PASS', '')}@geo.iproyal.com:12321" if os.getenv('IPROYAL_USER') and os.getenv('IPROYAL_PASS') else None,
         },
         
         'switch_threshold_percent': 2.0,  # Switch if >2% blocks in 5min
